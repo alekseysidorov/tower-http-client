@@ -11,7 +11,7 @@ categories = [
 ]
 keywords = ["io", "async", "futures", "service", "http"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/alekseysidorov/tower-reqwest"
+repository = "https://github.com/alekseysidorov/tower-http-client"
 rust-version = "1.75"
 
 [workspace.dependencies]
@@ -22,7 +22,7 @@ http = "1.0"
 http-body = "1.0"
 http-body-util = "0.1"
 include-utils = "0.2"
-pin-project = "1.0"
+pin-project = "1.1"
 pretty_assertions = "1.4"
 reqwest = { version = "0.12", default-features = false, features = ["stream"] }
 retry-policies = "0.4"

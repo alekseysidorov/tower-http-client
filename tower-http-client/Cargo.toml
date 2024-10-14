@@ -3,7 +3,7 @@ name = "tower-http-client"
 description = "Extra Tower middlewares and utilities for HTTP clients."
 documentation = "https://docs.rs/crate/tower-http-client"
 readme = "README.md"
-version = "0.4.0-alpha.3"
+version = "0.4.0"
 
 edition.workspace = true
 license.workspace = true
@@ -30,7 +30,7 @@ tower-service = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-tower-reqwest = { version = "0.4.0-alpha.2", path = "../tower-reqwest" }
+tower-reqwest = { version = "0.4.0", path = "../tower-reqwest" }
 
 anyhow = { workspace = true }
 reqwest = { workspace = true }
