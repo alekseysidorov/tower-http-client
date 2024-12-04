@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2024.12.04
+
+- Fix typos in the documentation.
+
+- Bump minimum supported Rust version to `1.78`.
+
 ## [0.4.0] - 2024.10.14
 
 - **breaking:** Extensions and utilities for Tower services that provides HTTP
@@ -65,9 +71,9 @@ and this project adheres to
 
 ## [0.2.0] - 2024.04.21
 
-The `tower-reqwest` has been splitted into two parts: [`tower-reqwest`] itself
-with adapters for `tower-http` and [`tower-http-client`] with the useful utils
-and extensions for creating an clients.
+The `tower-reqwest` has been split into two parts: [`tower-reqwest`] itself with
+adapters for `tower-http` and [`tower-http-client`] with the useful utils and
+extensions for creating an clients.
 
 [`tower-http-client`]: tower-reqwest
 [`tower-reqwest`]: tower-http-client

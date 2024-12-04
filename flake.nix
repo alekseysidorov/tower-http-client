@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -17,6 +17,8 @@
     , treefmt-nix
     }: flake-utils.lib.eachDefaultSystem (system:
     let
+      # Minimum supported Rust version
+      msrv = "1.78.0";
       # Setup nixpkgs
       pkgs = import nixpkgs {
         inherit system;
@@ -25,7 +27,7 @@
           rust-overlay.overlays.default
           (final: prev: {
             rustToolchains = {
-              msrv = prev.rust-bin.stable."1.75.0".default;
+              msrv = prev.rust-bin.stable.${msrv}.default;
               stable = prev.rust-bin.stable.latest.default.override {
                 extensions = [
                   "rust-src"
@@ -58,10 +60,10 @@
           text = ''
             cargo nextest run --workspace --all-targets --no-default-features
             cargo nextest run --workspace --all-targets --all-features
-            
+
             cargo test --workspace --doc --no-default-features
             cargo test --workspace --doc --all-features
-            
+
             cargo run --example rate_limiter
             cargo run --example retry
           '';
@@ -69,8 +71,9 @@
 
         lints = writeShellApplication {
           name = "ci-run-lints";
-          runtimeInputs = with pkgs; [ rustToolchains.stable ] ++ runtimeInputs;
+          runtimeInputs = with pkgs; [ rustToolchains.stable typos ] ++ runtimeInputs;
           text = ''
+            typos
             cargo clippy --workspace --all --no-default-features
             cargo clippy --workspace --all --all-targets --all-features
             cargo doc --workspace --no-deps --no-default-features
@@ -81,7 +84,7 @@
         semver_checks = writeShellApplication {
           name = "ci-run-semver-checks";
           runtimeInputs = with pkgs; [
-            rustToolchains.stable
+            rustToolchains.msrv
             cargo-semver-checks
           ] ++ runtimeInputs;
           text = ''cargo semver-checks'';

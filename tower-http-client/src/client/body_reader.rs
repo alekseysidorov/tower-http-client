@@ -19,7 +19,7 @@ pub struct BodyReader<B>(B);
 pub enum BodyReaderError<E, D> {
     /// An error occurred while reading the body.
     Read(E),
-    /// An error occured while decoding the body content.
+    /// An error occurred while decoding the body content.
     Decode(D),
 }
 
@@ -75,7 +75,7 @@ impl<B> BodyReader<B> {
     ///
     ///     assert_eq!(content, "Hello world");
     ///     Ok(())
-    /// }    
+    /// }
     /// ```
     pub async fn utf8(self) -> Result<String, BodyReaderError<B::Error, FromUtf8Error>>
     where
@@ -103,7 +103,7 @@ impl<B> BodyReader<B> {
     ///
     ///     assert_eq!(content["id"], 1234);
     ///     Ok(())
-    /// }    
+    /// }
     /// ```
     #[cfg(feature = "json")]
     #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
