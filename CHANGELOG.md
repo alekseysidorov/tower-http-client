@@ -65,9 +65,9 @@ and this project adheres to
 
 ## [0.2.0] - 2024.04.21
 
-The `tower-reqwest` has been splitted into two parts: [`tower-reqwest`] itself
-with adapters for `tower-http` and [`tower-http-client`] with the useful utils
-and extensions for creating an clients.
+The `tower-reqwest` has been split into two parts: [`tower-reqwest`] itself with
+adapters for `tower-http` and [`tower-http-client`] with the useful utils and
+extensions for creating an clients.
 
 [`tower-http-client`]: tower-reqwest
 [`tower-reqwest`]: tower-http-client

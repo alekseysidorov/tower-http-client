@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -58,10 +58,10 @@
           text = ''
             cargo nextest run --workspace --all-targets --no-default-features
             cargo nextest run --workspace --all-targets --all-features
-            
+
             cargo test --workspace --doc --no-default-features
             cargo test --workspace --doc --all-features
-            
+
             cargo run --example rate_limiter
             cargo run --example retry
           '';
@@ -69,8 +69,9 @@
 
         lints = writeShellApplication {
           name = "ci-run-lints";
-          runtimeInputs = with pkgs; [ rustToolchains.stable ] ++ runtimeInputs;
+          runtimeInputs = with pkgs; [ rustToolchains.stable typos ] ++ runtimeInputs;
           text = ''
+            typos
             cargo clippy --workspace --all --no-default-features
             cargo clippy --workspace --all --all-targets --all-features
             cargo doc --workspace --no-deps --no-default-features
