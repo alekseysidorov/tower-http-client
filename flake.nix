@@ -1,10 +1,7 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    rust-overlay.url = "github:oxalica/rust-overlay";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-utils.url = "github:numtide/flake-utils";
   };

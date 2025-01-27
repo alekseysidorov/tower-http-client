@@ -8,7 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
-- Added a `set-header` module to the `tower-reqwest` crate, which provides a way to modify the request headers.
+- Added a `set-header` module to the `tower-reqwest` crate, which provides a way
+  to modify the request headers.
 
 ## [0.4.1] - 2024.12.04
 
