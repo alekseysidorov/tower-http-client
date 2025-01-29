@@ -39,6 +39,10 @@ tower = { workspace = true }
 tower-http = { workspace = true, features = ["set-header", "util", "request-id"] }
 wiremock = { workspace = true }
 
+[[example]]
+name = "set_header"
+required-features = ["set-header"]
+
 [lints]
 workspace = true
 

@@ -4,6 +4,14 @@
 //! The main difference is that this module is designed to work with the `reqwest` client,
 //! while the [`set-header`] module is designed to work with the abstract `http` service.
 //!
+//! # Example
+//!
+//! Setting a header from a fixed value
+//!
+//! ```rust
+#![doc = include_str!("../examples/set_header.rs")]
+//! ```
+//!
 //! [`set-header`]: https://docs.rs/tower-http/latest/tower_http/set_header/index.html
 
 use std::{
@@ -127,8 +135,8 @@ impl<M> SetRequestHeaderLayer<M> {
 
     fn new(header_name: HeaderName, make: M, mode: InsertHeaderMode) -> Self {
         Self {
-            make,
             header_name,
+            make,
             mode,
         }
     }

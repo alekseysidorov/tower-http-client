@@ -1,7 +1,7 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
-    rust-overlay.url = "github:oxalica/rust-overlay";
+    fenix.url = "github:nix-community/fenix/monthly";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -10,28 +10,26 @@
     { self
     , nixpkgs
     , flake-utils
-    , rust-overlay
+    , fenix
     , treefmt-nix
     }: flake-utils.lib.eachDefaultSystem (system:
     let
       # Minimum supported Rust version
-      msrv = "1.78.0";
+      msrv = {
+        name = "1.78.0";
+        sha256 = "sha256-opUgs6ckUQCyDxcB9Wy51pqhd0MPGHUVbwRKKPGiwZU=";
+      };
       # Setup nixpkgs
       pkgs = import nixpkgs {
         inherit system;
 
         overlays = [
-          rust-overlay.overlays.default
+          fenix.overlays.default
           (final: prev: {
             rustToolchains = {
-              msrv = prev.rust-bin.stable.${msrv}.default;
-              stable = prev.rust-bin.stable.latest.default.override {
-                extensions = [
-                  "rust-src"
-                  "rust-analyzer"
-                ];
-              };
-              nightly = prev.rust-bin.nightly.latest.default;
+              stable = prev.fenix.stable.defaultToolchain;
+              msrv = (prev.fenix.fromToolchainName msrv).defaultToolchain;
+              nightly = (prev.fenix.complete.withComponents [ "rustfmt" ]);
             };
           })
         ];
