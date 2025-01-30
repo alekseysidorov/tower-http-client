@@ -8,7 +8,7 @@
 //!
 //! Setting a header from a fixed value
 //!
-//! ```rust
+//! ```
 #![doc = include_str!("../examples/set_header.rs")]
 //! ```
 //!
@@ -92,7 +92,13 @@ impl InsertHeaderMode {
 
 /// Layer that applies [`SetRequestHeader`] which adds a request header.
 ///
-/// See [`SetRequestHeader`] for more details.
+/// # Example
+///
+/// Setting a header from a fixed value
+///
+/// ```
+#[doc = include_str!("../examples/set_header.rs")]
+/// ```
 pub struct SetRequestHeaderLayer<M> {
     header_name: HeaderName,
     make: M,

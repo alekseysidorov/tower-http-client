@@ -1,6 +1,14 @@
-//! Middlweare for adding [`Authorization`] header to requests.
+//! Middleware for adding [`Authorization`] header to requests.
 //!
 //! This module borrows heavily from the `auth` module in the `tower-http` crate.
+//!
+//! # Example
+//!
+//! Authorizing requests using a "bearer" token.
+//!
+//! ```
+#![doc = include_str!("../examples/add_authorization.rs")]
+//! ```
 //!
 //! [`Authorization`]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization
 
@@ -13,6 +21,13 @@ use tower_service::Service;
 
 /// Layer which adds authorization to all requests using the [`Authorization`] header.
 ///
+/// # Example
+///
+/// Authorizing requests using a "bearer" token.
+///
+/// ```
+#[doc = include_str!("../examples/add_authorization.rs")]
+/// ```
 /// [`Authorization`]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization
 #[derive(Debug, Clone)]
 pub struct AddAuthorizationLayer {

@@ -45,6 +45,10 @@ wiremock = { workspace = true }
 name = "set_header"
 required-features = ["set-header"]
 
+[[example]]
+name = "add_authorization"
+required-features = ["auth"]
+
 [lints]
 workspace = true
 
