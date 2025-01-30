@@ -8,6 +8,9 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Added an `auth` module to the `tower-reqwest` crate, which provides a way to
+  add an authorization header to the requests.
+
 - Added a `set-header` module to the `tower-reqwest` crate, which provides a way
   to modify the request headers.
 

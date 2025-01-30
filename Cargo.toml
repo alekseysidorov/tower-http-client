@@ -39,6 +39,7 @@ tower-layer = "0.3"
 tower-service = "0.3"
 url = "2.5"
 wiremock = "0.6"
+base64 = "0.22"
 
 [workspace.lints.rust]
 missing_debug_implementations = "warn"

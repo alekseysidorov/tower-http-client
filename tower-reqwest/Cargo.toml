@@ -13,10 +13,12 @@ repository.workspace = true
 rust-version.workspace = true
 
 [features]
-default = ["set-header"]
+default = []
+auth = ["dep:base64"]
 set-header = []
 
 [dependencies]
+base64 = { workspace = true, optional = true }
 bytes = { workspace = true }
 futures-util = { workspace = true }
 http = { workspace = true }

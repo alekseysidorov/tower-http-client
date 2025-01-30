@@ -15,6 +15,8 @@ pub use crate::error::Error;
 mod adapters;
 pub mod error;
 
+#[cfg(feature = "auth")]
+pub mod auth;
 #[cfg(feature = "set-header")]
 pub mod set_header;
 
