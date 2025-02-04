@@ -5,7 +5,7 @@ members = ["tower-http-client", "tower-reqwest"]
 [workspace.package]
 edition = "2021"
 rust-version = "1.78"
-version = "0.4.1"
+version = "0.5.0"
 categories = [
   "asynchronous",
   "network-programming",
@@ -16,7 +16,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/alekseysidorov/tower-http-client"
 
 [workspace.dependencies]
-tower-reqwest = { version = "0.4.1", path = "tower-reqwest" }
+tower-reqwest = { version = "0.5.0", path = "tower-reqwest" }
 
 anyhow = "1.0"
 bytes = "1.9"

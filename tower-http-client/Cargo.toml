@@ -30,7 +30,7 @@ tower-service = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-tower-reqwest = { version = "0.4.1", path = "../tower-reqwest" }
+tower-reqwest = { version = "0.5.0", path = "../tower-reqwest" }
 
 anyhow = { workspace = true }
 reqwest = { workspace = true }
