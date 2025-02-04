@@ -14,8 +14,11 @@ rust-version.workspace = true
 
 [features]
 default = []
+auth = ["dep:base64"]
+set-header = []
 
 [dependencies]
+base64 = { workspace = true, optional = true }
 bytes = { workspace = true }
 futures-util = { workspace = true }
 http = { workspace = true }
@@ -37,6 +40,14 @@ tokio = { workspace = true }
 tower = { workspace = true }
 tower-http = { workspace = true, features = ["set-header", "util", "request-id"] }
 wiremock = { workspace = true }
+
+[[example]]
+name = "set_header"
+required-features = ["set-header"]
+
+[[example]]
+name = "add_authorization"
+required-features = ["auth"]
 
 [lints]
 workspace = true

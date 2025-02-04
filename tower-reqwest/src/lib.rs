@@ -15,6 +15,11 @@ pub use crate::error::Error;
 mod adapters;
 pub mod error;
 
+#[cfg(feature = "auth")]
+pub mod auth;
+#[cfg(feature = "set-header")]
+pub mod set_header;
+
 /// Alias for a Result with the error type `crate::Error`.
 pub type Result<T, E = crate::Error> = std::result::Result<T, E>;
 
