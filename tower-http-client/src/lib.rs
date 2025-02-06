@@ -16,5 +16,3 @@ pub use client::{ResponseExt, ServiceExt};
 #[cfg(feature = "reqwest")]
 pub mod adapters;
 pub mod client;
-#[cfg(feature = "util")]
-pub mod util;
