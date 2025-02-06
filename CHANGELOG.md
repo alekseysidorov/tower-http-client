@@ -8,8 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
-- Replaced the own implementation of the `BoxCloneSyncService` with the one from
-  the `tower` crate.
+- Removed the own implementation of the `BoxCloneSyncService`, please use the
+  `tower::util::BoxCloneSyncService` instead.
 
 - Added an `auth` module to the `tower-reqwest` crate, which provides a way to
   add an authorization header to the requests.

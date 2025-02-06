@@ -41,8 +41,7 @@ tower-http = { workspace = true, features = ["set-header", "util", "map-request-
 wiremock = { workspace = true }
 
 [features]
-default = ["json", "reqwest", "util"]
-util = []
+default = ["json", "reqwest"]
 json = ["dep:serde_json"]
 reqwest = ["dep:tower-reqwest"]
 
@@ -56,7 +55,7 @@ required-features = ["reqwest"]
 
 [[test]]
 name = "service_ext"
-required-features = ["reqwest", "util"]
+required-features = ["reqwest"]
 
 [lints]
 workspace = true
