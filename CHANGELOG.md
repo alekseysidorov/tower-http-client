@@ -8,8 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
-- Removed the own implementation of the `BoxCloneSyncService`, please use the
-  `tower::util::BoxCloneSyncService` instead.
+- Added a `form` method to the `ClientRequest` to send a form data.
+
+- **breaking:** Removed the own implementation of the `BoxCloneSyncService`,
+  please use the `tower::util::BoxCloneSyncService` instead.
 
 - Added an `auth` module to the `tower-reqwest` crate, which provides a way to
   add an authorization header to the requests.

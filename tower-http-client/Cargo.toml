@@ -23,6 +23,7 @@ http-body-util = { workspace = true }
 include-utils = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true, optional = true }
+serde_urlencoded = { workspace = true, optional = true }
 thiserror = { workspace = true }
 tower = { workspace = true, default-features = false, features = ["util"] }
 tower-layer = { workspace = true }
@@ -41,9 +42,10 @@ tower-http = { workspace = true, features = ["set-header", "util", "map-request-
 wiremock = { workspace = true }
 
 [features]
-default = ["json", "reqwest"]
+default = ["json", "reqwest", "form"]
 json = ["dep:serde_json"]
 reqwest = ["dep:tower-reqwest"]
+form = ["dep:serde_urlencoded"]
 
 [[example]]
 name = "rate_limiter"

@@ -149,11 +149,36 @@ impl<'a, S, Err, ReqBody, RespBody> ClientRequest<'a, S, Err, ReqBody, RespBody>
 
         let bytes = bytes::Bytes::from(serde_json::to_vec(value)?);
         if let Some(headers) = self.headers_mut() {
-            if !headers.contains_key(CONTENT_TYPE) {
-                headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-            }
+            headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         }
         Ok(self.body(bytes))
+    }
+
+    /// Sets a form body for this request.
+    ///
+    /// Additionally this method adds a `CONTENT_TYPE` header for form body.
+    /// If you decide to override the request body, keep this in mind.
+    ///
+    /// # Errors
+    ///
+    /// If the given value's implementation of [`serde::Serialize`] decides to fail.
+    #[cfg(feature = "form")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "form")))]
+    pub fn form<T: serde::Serialize + ?Sized>(
+        mut self,
+        form: &T,
+    ) -> Result<ClientRequest<'a, S, Err, bytes::Bytes, RespBody>, serde_urlencoded::ser::Error>
+    {
+        use http::header::CONTENT_TYPE;
+
+        let string = serde_urlencoded::to_string(form)?;
+        if let Some(headers) = self.headers_mut() {
+            headers.insert(
+                CONTENT_TYPE,
+                HeaderValue::from_static("application/x-www-form-urlencoded"),
+            );
+        }
+        Ok(self.body(string))
     }
 
     /// Consumes this builder and returns a constructed request.
