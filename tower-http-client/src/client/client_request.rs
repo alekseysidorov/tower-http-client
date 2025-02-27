@@ -7,6 +7,10 @@ use tower_service::Service;
 
 use super::{IntoUri, ServiceExt as _};
 
+type EmptyBody = ();
+
+const EMPTY_BODY: EmptyBody = ();
+
 /// An [`http::Request`] builder.
 ///
 /// Generally, this builder copies the behavior of the [`http::request::Builder`],
@@ -15,29 +19,13 @@ use super::{IntoUri, ServiceExt as _};
 ///
 /// [`reqwest`]: https://docs.rs/reqwest/latest/reqwest/struct.RequestBuilder.html
 #[derive(Debug)]
-pub struct ClientRequest<'a, S, Err, ReqBody, RespBody> {
+pub struct ClientRequestBuilder<'a, S, Err, RespBody> {
     service: &'a mut S,
     builder: http::request::Builder,
-    body: ReqBody,
     _phantom: PhantomData<(Err, RespBody)>,
 }
 
-impl<'a, S, Err, ReqBody, RespBody> ClientRequest<'a, S, Err, ReqBody, RespBody>
-where
-    ReqBody: Default,
-{
-    /// Creates a client request builder.
-    pub fn builder(service: &'a mut S) -> Self {
-        Self {
-            service,
-            builder: http::Request::builder(),
-            body: ReqBody::default(),
-            _phantom: PhantomData,
-        }
-    }
-}
-
-impl<'a, S, Err, ReqBody, RespBody> ClientRequest<'a, S, Err, ReqBody, RespBody> {
+impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     /// Sets the HTTP method for this request.
     ///
     /// By default this is `GET`.
@@ -122,13 +110,12 @@ impl<'a, S, Err, ReqBody, RespBody> ClientRequest<'a, S, Err, ReqBody, RespBody>
     pub fn body<NewReqBody>(
         self,
         body: impl Into<NewReqBody>,
-    ) -> ClientRequest<'a, S, Err, NewReqBody, RespBody> {
-        ClientRequest {
+    ) -> Result<ClientRequest<'a, S, Err, NewReqBody, RespBody>, http::Error> {
+        Ok(ClientRequest {
             service: self.service,
-            builder: self.builder,
-            body: body.into(),
+            request: self.builder.body(body.into())?,
             _phantom: PhantomData,
-        }
+        })
     }
 
     /// Sets a JSON body for this request.
@@ -142,16 +129,19 @@ impl<'a, S, Err, ReqBody, RespBody> ClientRequest<'a, S, Err, ReqBody, RespBody>
     #[cfg(feature = "json")]
     #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
     pub fn json<T: serde::Serialize + ?Sized>(
-        mut self,
+        self,
         value: &T,
-    ) -> Result<ClientRequest<'a, S, Err, bytes::Bytes, RespBody>, serde_json::Error> {
-        use http::header::CONTENT_TYPE;
+    ) -> Result<
+        ClientRequest<'a, S, Err, bytes::Bytes, RespBody>,
+        super::request_ext::SetBodyError<serde_json::Error>,
+    > {
+        use super::RequestBuilderExt as _;
 
-        let bytes = bytes::Bytes::from(serde_json::to_vec(value)?);
-        if let Some(headers) = self.headers_mut() {
-            headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-        }
-        Ok(self.body(bytes))
+        Ok(ClientRequest {
+            service: self.service,
+            request: self.builder.json(value)?,
+            _phantom: PhantomData,
+        })
     }
 
     /// Sets a form body for this request.
@@ -165,29 +155,57 @@ impl<'a, S, Err, ReqBody, RespBody> ClientRequest<'a, S, Err, ReqBody, RespBody>
     #[cfg(feature = "form")]
     #[cfg_attr(docsrs, doc(cfg(feature = "form")))]
     pub fn form<T: serde::Serialize + ?Sized>(
-        mut self,
+        self,
         form: &T,
-    ) -> Result<ClientRequest<'a, S, Err, bytes::Bytes, RespBody>, serde_urlencoded::ser::Error>
-    {
-        use http::header::CONTENT_TYPE;
+    ) -> Result<
+        ClientRequest<'a, S, Err, String, RespBody>,
+        super::request_ext::SetBodyError<serde_urlencoded::ser::Error>,
+    > {
+        use super::RequestBuilderExt as _;
 
-        let string = serde_urlencoded::to_string(form)?;
-        if let Some(headers) = self.headers_mut() {
-            headers.insert(
-                CONTENT_TYPE,
-                HeaderValue::from_static("application/x-www-form-urlencoded"),
-            );
-        }
-        Ok(self.body(string))
+        Ok(ClientRequest {
+            service: self.service,
+            request: self.builder.form(form)?,
+            _phantom: PhantomData,
+        })
     }
 
-    /// Consumes this builder and returns a constructed request.
+    /// Consumes this builder and returns a constructed request without a body.
     ///
     /// # Errors
     ///
     /// If erroneous data was passed during the query building process.
-    pub fn build(self) -> Result<http::Request<ReqBody>, http::Error> {
-        self.builder.body(self.body)
+    #[allow(clippy::missing_panics_doc)]
+    pub fn build(self) -> ClientRequest<'a, S, Err, EmptyBody, RespBody> {
+        ClientRequest {
+            service: self.service,
+            request: self
+                .builder
+                .body(EMPTY_BODY)
+                .expect("failed to build request without a body"),
+            _phantom: PhantomData,
+        }
+    }
+}
+
+/// An [`http::Request`] wrapper with a reference to a client.
+///
+/// This struct is used to send constructed HTTP request by using a client.
+#[derive(Debug)]
+pub struct ClientRequest<'a, S, Err, ReqBody, RespBody> {
+    service: &'a mut S,
+    request: http::Request<ReqBody>,
+    _phantom: PhantomData<(Err, RespBody)>,
+}
+
+impl<'a, S, Err, RespBody> ClientRequest<'a, S, Err, (), RespBody> {
+    /// Creates a client request builder.
+    pub fn builder(service: &'a mut S) -> ClientRequestBuilder<'a, S, Err, RespBody> {
+        ClientRequestBuilder {
+            service,
+            builder: http::Request::builder(),
+            _phantom: PhantomData,
+        }
     }
 }
 
@@ -198,8 +216,28 @@ pub trait Captures<U> {}
 
 impl<T: ?Sized, U> Captures<U> for T {}
 
+impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
+    /// Sends the request to the target URI.
+    #[allow(clippy::missing_panics_doc)]
+    pub fn send<ReqBody>(
+        self,
+    ) -> impl Future<Output = Result<http::Response<RespBody>, Err>> + Captures<&'a ()>
+    where
+        S: Service<http::Request<ReqBody>, Response = http::Response<RespBody>, Error = Err>,
+        S::Future: Send + 'static,
+        S::Error: 'static,
+        ReqBody: Default,
+    {
+        let request = self
+            .builder
+            .body(ReqBody::default())
+            .expect("failed to build request without a body");
+        self.service.execute(request)
+    }
+}
+
 impl<'a, S, Err, R, RespBody> ClientRequest<'a, S, Err, R, RespBody> {
-    /// Constructs the request and sends it to the target URI.
+    /// Sends the request to the target URI.
     pub fn send<ReqBody>(
         self,
     ) -> Result<
@@ -212,7 +250,65 @@ impl<'a, S, Err, R, RespBody> ClientRequest<'a, S, Err, R, RespBody> {
         S::Error: 'static,
         ReqBody: From<R>,
     {
-        let request = self.builder.body(self.body)?;
-        Ok(self.service.execute(request))
+        Ok(self.service.execute(self.request))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use http::Method;
+    use reqwest::Client;
+    use tower::ServiceBuilder;
+    use tower_reqwest::HttpClientLayer;
+
+    use crate::ServiceExt as _;
+
+    // Check that client request builder uses proper methods.
+    #[test]
+    fn test_service_ext_request_builder_methods() {
+        let mut fake_client = ServiceBuilder::new()
+            .layer(HttpClientLayer)
+            .service(Client::new());
+
+        assert_eq!(
+            fake_client.get("http://localhost").build().request.method(),
+            Method::GET
+        );
+        assert_eq!(
+            fake_client
+                .post("http://localhost")
+                .build()
+                .request
+                .method(),
+            Method::POST
+        );
+        assert_eq!(
+            fake_client.put("http://localhost").build().request.method(),
+            Method::PUT
+        );
+        assert_eq!(
+            fake_client
+                .patch("http://localhost")
+                .build()
+                .request
+                .method(),
+            Method::PATCH
+        );
+        assert_eq!(
+            fake_client
+                .delete("http://localhost")
+                .build()
+                .request
+                .method(),
+            Method::DELETE
+        );
+        assert_eq!(
+            fake_client
+                .head("http://localhost")
+                .build()
+                .request
+                .method(),
+            Method::HEAD
+        );
     }
 }

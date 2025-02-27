@@ -59,7 +59,7 @@ async fn main() -> anyhow::Result<()> {
     let response = client
         .clone()
         .get("http://ip.jsontest.com")
-        .send()?
+        .send()
         .await?;
 
     let text = response.body_reader().utf8().await?;

@@ -8,6 +8,18 @@ and this project adheres to
 
 ## [Unreleased]
 
+- **breaking:** `ClientRequest` has been renamed the to the
+  `ClientRequestBuilder`, added a new `ClientRequest` struct to send built
+  requests. Both structs are strongly redesigned in order to improve the
+  usability and composeability.
+
+- Added a `request_ext` module with the `RequestBuilderExt` trait to extend the
+  `http::request::Builder` with additional methods.
+
+- Bump minimum supported Rust version to `1.81`.
+
+- **breaking:** Made `request_builder` module private.
+
 - Added a `form` method to the `ClientRequest` to send a form data.
 
 - **breaking:** Removed the own implementation of the `BoxCloneSyncService`,

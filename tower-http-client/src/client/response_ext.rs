@@ -15,7 +15,7 @@ pub trait ResponseExt<T>: Sized {
     ///     // Create a new client
     ///     let mut client = HttpClientService::new(reqwest::Client::new());
     ///     // Execute request by using this service.
-    ///     let response = client.get("http://ip.jsontest.com").send()?.await?;
+    ///     let response = client.get("http://ip.jsontest.com").send().await?;
     ///
     ///     let text = response.body_reader().utf8().await?;
     ///     println!("{text}");

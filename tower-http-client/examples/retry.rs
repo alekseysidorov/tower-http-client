@@ -139,7 +139,7 @@ async fn main() -> anyhow::Result<()> {
         .map_err(anyhow::Error::msg)
         .boxed_clone();
 
-    let response = client.get(format!("{mock_uri}/hello")).send()?.await?;
+    let response = client.get(format!("{mock_uri}/hello")).send().await?;
     anyhow::ensure!(response.status().is_success(), "response failed");
 
     Ok(())
