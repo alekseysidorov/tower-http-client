@@ -118,7 +118,7 @@ async fn test_service_ext_put_json() -> anyhow::Result<()> {
         .clone()
         .put(format!("{mock_uri}/hello"))
         .json(&data)?
-        .send()?
+        .send()
         .await?;
     let value: Data = response.body_reader().json().await?;
     assert_eq!(value.id, "resp-1");

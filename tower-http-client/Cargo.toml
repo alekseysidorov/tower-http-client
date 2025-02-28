@@ -55,6 +55,10 @@ required-features = ["reqwest"]
 name = "retry"
 required-features = ["reqwest"]
 
+[[example]]
+name = "send_json"
+required-features = ["reqwest", "json"]
+
 [[test]]
 name = "service_ext"
 required-features = ["reqwest"]

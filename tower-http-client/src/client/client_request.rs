@@ -103,10 +103,12 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
         self.builder.extensions_mut()
     }
 
-    /// Sets a body for this request.
+    /// "Consumes" this builder, using the provided `body` to return a
+    /// constructed [`ClientRequest`].
     ///
-    /// Unlike the [`http::request::Builder`] this function doesn't consume builder.
-    /// This allows to override the request body.
+    /// # Errors
+    ///
+    /// Same as the [`http::request::Builder::body`]
     pub fn body<NewReqBody>(
         self,
         body: impl Into<NewReqBody>,
@@ -126,6 +128,12 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     /// # Errors
     ///
     /// If the given value's implementation of [`serde::Serialize`] decides to fail.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    #[doc = include_str!("../../examples/send_json.rs")]
+    /// ```
     #[cfg(feature = "json")]
     #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
     pub fn json<T: serde::Serialize + ?Sized>(
@@ -240,17 +248,14 @@ impl<'a, S, Err, R, RespBody> ClientRequest<'a, S, Err, R, RespBody> {
     /// Sends the request to the target URI.
     pub fn send<ReqBody>(
         self,
-    ) -> Result<
-        impl Future<Output = Result<http::Response<RespBody>, Err>> + Captures<&'a ()>,
-        http::Error,
-    >
+    ) -> impl Future<Output = Result<http::Response<RespBody>, Err>> + Captures<&'a ()>
     where
         S: Service<http::Request<ReqBody>, Response = http::Response<RespBody>, Error = Err>,
         S::Future: Send + 'static,
         S::Error: 'static,
         ReqBody: From<R>,
     {
-        Ok(self.service.execute(self.request))
+        self.service.execute(self.request)
     }
 }
 
