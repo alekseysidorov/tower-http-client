@@ -160,6 +160,12 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     /// # Errors
     ///
     /// If the given value's implementation of [`serde::Serialize`] decides to fail.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    #[doc = include_str!("../../examples/send_form.rs")]
+    /// ```
     #[cfg(feature = "form")]
     #[cfg_attr(docsrs, doc(cfg(feature = "form")))]
     pub fn form<T: serde::Serialize + ?Sized>(

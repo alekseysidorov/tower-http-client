@@ -59,6 +59,10 @@ required-features = ["reqwest"]
 name = "send_json"
 required-features = ["reqwest", "json"]
 
+[[example]]
+name = "send_form"
+required-features = ["reqwest", "form"]
+
 [[test]]
 name = "service_ext"
 required-features = ["reqwest"]

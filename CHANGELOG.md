@@ -8,13 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
-- **breaking:** `ClientRequest` has been renamed the to the
-  `ClientRequestBuilder`, added a new `ClientRequest` struct to send built
-  requests. Both structs are strongly redesigned in order to improve the
-  usability and composeability.
+- **breaking:** Split the old `ClientRequest` into separate builder and request
+  structs with updated error handling.
 
-- Added a `request_ext` module with the `RequestBuilderExt` trait to extend the
-  `http::request::Builder` with additional methods.
+- Introduced a `RequestBuilderExt` trait to extend the `http::request::Builder`
+  with additional methods to send a form data and a JSON objects.
 
 - Bump minimum supported Rust version to `1.81`.
 
