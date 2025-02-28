@@ -17,20 +17,7 @@ struct SomeInfo {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Start a mock server.
-    let mock_server = MockServer::start().await;
-    Mock::given(method("POST"))
-        .and(path("/test"))
-        .respond_with(move |request: &wiremock::Request| {
-            let info: SomeInfo = serde_urlencoded::from_bytes(request.body.as_ref()).unwrap();
-
-            eprintln!("Received request with info {info:?}",);
-            ResponseTemplate::new(200)
-                .set_body_json(format!("I am {} and {} years old", info.name, info.age))
-        })
-        .mount(&mock_server)
-        .await;
-    let mock_server_uri = mock_server.uri();
+    let (_handle, mock_server_uri) = create_mock_server().await;
 
     eprintln!("-> Creating an HTTP client with Tower layers...");
     let mut client = ServiceBuilder::new()
@@ -58,4 +45,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     Ok(())
+}
+
+async fn create_mock_server() -> (MockServer, String) {
+    let mock_server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/test"))
+        .respond_with(move |request: &wiremock::Request| {
+            let info: SomeInfo = serde_urlencoded::from_bytes(request.body.as_ref()).unwrap();
+
+            eprintln!("Received request with info {info:?}",);
+            ResponseTemplate::new(200)
+                .set_body_json(format!("I am {} and {} years old", info.name, info.age))
+        })
+        .mount(&mock_server)
+        .await;
+    let mock_server_uri = mock_server.uri();
+    (mock_server, mock_server_uri)
 }
