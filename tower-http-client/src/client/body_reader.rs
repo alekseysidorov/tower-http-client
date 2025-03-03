@@ -116,4 +116,46 @@ impl<B> BodyReader<B> {
         let bytes = self.bytes().await.map_err(BodyReaderError::Read)?;
         serde_json::from_slice(&bytes).map_err(BodyReaderError::Decode)
     }
+
+    /// Deserializes the response body as form data.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///    use http_body_util::Full;
+    ///    use serde::{Deserialize, Serialize};
+    ///    use tower_http_client::client::BodyReader;
+    ///
+    ///    #[derive(Debug, Serialize, Deserialize)]
+    ///    struct UserInfo {
+    ///        name: String,
+    ///        age: u32,
+    ///    }
+    ///
+    ///    #[tokio::main]
+    ///    async fn main() -> anyhow::Result<()> {
+    ///        let data = serde_urlencoded::to_string(&UserInfo {
+    ///            name: "John Doe".to_string(),
+    ///            age: 18,
+    ///        })
+    ///        .unwrap();
+    ///        let body = Full::new(data.as_ref());
+    ///        let content: UserInfo = BodyReader::new(body).form().await?;
+    ///
+    ///        assert_eq!(content.name, "John Doe");
+    ///        assert_eq!(content.age, 18);
+    ///        Ok(())
+    ///    }
+    /// ```
+    #[cfg(feature = "form")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "form")))]
+    pub async fn form<T>(self) -> Result<T, BodyReaderError<B::Error, serde_urlencoded::de::Error>>
+    where
+        T: serde::de::DeserializeOwned,
+        B: Body,
+        B::Data: Buf,
+    {
+        let bytes = self.bytes().await.map_err(BodyReaderError::Read)?;
+        serde_urlencoded::from_bytes(&bytes).map_err(BodyReaderError::Decode)
+    }
 }
