@@ -232,7 +232,10 @@ impl<T: ?Sized, U> Captures<U> for T {}
 
 impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     /// Sends the request to the target URI.
-    #[allow(clippy::missing_panics_doc)]
+    ///
+    /// # Panics
+    ///
+    /// - if the `ReqBody` is not valid body.
     pub fn send<ReqBody>(
         self,
     ) -> impl Future<Output = Result<http::Response<RespBody>, Err>> + Captures<&'a ()>

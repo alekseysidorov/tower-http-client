@@ -17,7 +17,7 @@ struct SomeInfo {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let (mock_server, mock_server_uri) = create_mock_server().await;
+    let (_mock_server, mock_server_uri) = create_mock_server().await;
 
     eprintln!("-> Creating an HTTP client with Tower layers...");
     let mut client = ServiceBuilder::new()
@@ -61,4 +61,5 @@ async fn create_mock_server() -> (MockServer, String) {
         .mount(&mock_server)
         .await;
     let mock_server_uri = mock_server.uri();
+    (mock_server, mock_server_uri)
 }
