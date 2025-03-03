@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Added a `form` method to the `BodyReader` to decode form data.
+
 - **breaking:** Split the old `ClientRequest` into separate builder and request
   structs with updated error handling.
 
