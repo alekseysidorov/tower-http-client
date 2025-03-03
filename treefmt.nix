@@ -7,7 +7,12 @@
   programs.nixpkgs-fmt.enable = true;
   programs.rustfmt = {
     enable = true;
-    package = pkgs.rustToolchains.nightly;
+    # Fix issue "package does not have the meta.mainProgram attribute".
+    package = pkgs.rustToolchains.nightly // {
+      meta = pkgs.rustToolchains.nightly.meta // {
+        mainProgram = "rustfmt";
+      };
+    };
   };
   programs.beautysh.enable = true;
   programs.deno.enable = true;

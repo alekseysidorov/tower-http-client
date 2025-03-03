@@ -3,7 +3,7 @@ use std::future::Future;
 use http::{Method, Uri};
 use tower_service::Service;
 
-use super::{ClientRequest, IntoUri};
+use super::{client_request::ClientRequestBuilder, ClientRequest, IntoUri};
 
 /// An extension trait for Tower HTTP services with the typical client methods.
 ///
@@ -30,9 +30,8 @@ pub trait ServiceExt<ReqBody, RespBody, Err>: Sized {
         &mut self,
         method: Method,
         uri: U,
-    ) -> ClientRequest<'_, Self, Err, ReqBody, RespBody>
+    ) -> ClientRequestBuilder<'_, Self, Err, RespBody>
     where
-        ReqBody: Default,
         U: IntoUri,
         Uri: TryFrom<U::TryInto>,
         <Uri as TryFrom<U::TryInto>>::Error: Into<http::Error>,
@@ -41,9 +40,8 @@ pub trait ServiceExt<ReqBody, RespBody, Err>: Sized {
     }
 
     /// Convenience method to make a `GET` request to a given URL.
-    fn get<U>(&mut self, uri: U) -> ClientRequest<'_, Self, Err, ReqBody, RespBody>
+    fn get<U>(&mut self, uri: U) -> ClientRequestBuilder<'_, Self, Err, RespBody>
     where
-        ReqBody: Default,
         U: IntoUri,
         Uri: TryFrom<U::TryInto>,
         <Uri as TryFrom<U::TryInto>>::Error: Into<http::Error>,
@@ -52,9 +50,8 @@ pub trait ServiceExt<ReqBody, RespBody, Err>: Sized {
     }
 
     /// Convenience method to make a `PUT` request to a given URL.
-    fn put<U>(&mut self, uri: U) -> ClientRequest<'_, Self, Err, ReqBody, RespBody>
+    fn put<U>(&mut self, uri: U) -> ClientRequestBuilder<'_, Self, Err, RespBody>
     where
-        ReqBody: Default,
         U: IntoUri,
         Uri: TryFrom<U::TryInto>,
         <Uri as TryFrom<U::TryInto>>::Error: Into<http::Error>,
@@ -63,9 +60,8 @@ pub trait ServiceExt<ReqBody, RespBody, Err>: Sized {
     }
 
     /// Convenience method to make a `POST` request to a given URL.
-    fn post<U>(&mut self, uri: U) -> ClientRequest<'_, Self, Err, ReqBody, RespBody>
+    fn post<U>(&mut self, uri: U) -> ClientRequestBuilder<'_, Self, Err, RespBody>
     where
-        ReqBody: Default,
         U: IntoUri,
         Uri: TryFrom<U::TryInto>,
         <Uri as TryFrom<U::TryInto>>::Error: Into<http::Error>,
@@ -74,9 +70,8 @@ pub trait ServiceExt<ReqBody, RespBody, Err>: Sized {
     }
 
     /// Convenience method to make a `PATCH` request to a given URL.
-    fn patch<U>(&mut self, uri: U) -> ClientRequest<'_, Self, Err, ReqBody, RespBody>
+    fn patch<U>(&mut self, uri: U) -> ClientRequestBuilder<'_, Self, Err, RespBody>
     where
-        ReqBody: Default,
         U: IntoUri,
         Uri: TryFrom<U::TryInto>,
         <Uri as TryFrom<U::TryInto>>::Error: Into<http::Error>,
@@ -85,9 +80,8 @@ pub trait ServiceExt<ReqBody, RespBody, Err>: Sized {
     }
 
     /// Convenience method to make a `DELETE` request to a given URL.
-    fn delete<U>(&mut self, uri: U) -> ClientRequest<'_, Self, Err, ReqBody, RespBody>
+    fn delete<U>(&mut self, uri: U) -> ClientRequestBuilder<'_, Self, Err, RespBody>
     where
-        ReqBody: Default,
         U: IntoUri,
         Uri: TryFrom<U::TryInto>,
         <Uri as TryFrom<U::TryInto>>::Error: Into<http::Error>,
@@ -96,9 +90,8 @@ pub trait ServiceExt<ReqBody, RespBody, Err>: Sized {
     }
 
     /// Convenience method to make a `HEAD` request to a given URL.
-    fn head<U>(&mut self, uri: U) -> ClientRequest<'_, Self, Err, ReqBody, RespBody>
+    fn head<U>(&mut self, uri: U) -> ClientRequestBuilder<'_, Self, Err, RespBody>
     where
-        ReqBody: Default,
         U: IntoUri,
         Uri: TryFrom<U::TryInto>,
         <Uri as TryFrom<U::TryInto>>::Error: Into<http::Error>,

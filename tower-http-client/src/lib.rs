@@ -11,7 +11,7 @@
 #![doc = include_str!("../examples/rate_limiter.rs")]
 //! ```
 
-pub use client::{ResponseExt, ServiceExt};
+pub use client::{RequestBuilderExt, ResponseExt, ServiceExt};
 
 #[cfg(feature = "reqwest")]
 pub mod adapters;

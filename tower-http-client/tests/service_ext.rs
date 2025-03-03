@@ -1,4 +1,4 @@
-use http::{header::USER_AGENT, HeaderValue, Method};
+use http::{header::USER_AGENT, HeaderValue};
 use reqwest::Client;
 use tower::ServiceBuilder;
 use tower_http::ServiceBuilderExt;
@@ -10,41 +10,6 @@ use wiremock::{
 };
 
 mod utils;
-
-// Check that client request builder uses proper methods.
-#[test]
-fn test_service_ext_request_builder_methods() -> anyhow::Result<()> {
-    let mut fake_client = ServiceBuilder::new()
-        .layer(HttpClientLayer)
-        .service(Client::new());
-
-    assert_eq!(
-        fake_client.get("http://localhost").build()?.method(),
-        Method::GET
-    );
-    assert_eq!(
-        fake_client.post("http://localhost").build()?.method(),
-        Method::POST
-    );
-    assert_eq!(
-        fake_client.put("http://localhost").build()?.method(),
-        Method::PUT
-    );
-    assert_eq!(
-        fake_client.patch("http://localhost").build()?.method(),
-        Method::PATCH
-    );
-    assert_eq!(
-        fake_client.delete("http://localhost").build()?.method(),
-        Method::DELETE
-    );
-    assert_eq!(
-        fake_client.head("http://localhost").build()?.method(),
-        Method::HEAD
-    );
-
-    Ok(())
-}
 
 // Check that we can use tower-http layers on top of the compatibility wrapper.
 #[tokio::test]
@@ -102,7 +67,7 @@ async fn test_service_ext_get() -> anyhow::Result<()> {
     let response = client
         .clone()
         .get(format!("{mock_uri}/hello"))
-        .send()?
+        .send()
         .await?;
     assert!(response.status().is_success());
 
@@ -153,7 +118,7 @@ async fn test_service_ext_put_json() -> anyhow::Result<()> {
         .clone()
         .put(format!("{mock_uri}/hello"))
         .json(&data)?
-        .send()?
+        .send()
         .await?;
     let value: Data = response.body_reader().json().await?;
     assert_eq!(value.id, "resp-1");

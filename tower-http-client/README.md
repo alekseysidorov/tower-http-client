@@ -53,13 +53,12 @@ fn make_client(client: reqwest::Client) -> HttpClient {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // Create a new client
-    let client = make_client(reqwest::Client::new());
+    // Create a new client.
+    let mut client = make_client(reqwest::Client::new());
     // Execute request by using this service.
     let response = client
-        .clone()
         .get("http://ip.jsontest.com")
-        .send()?
+        .send()
         .await?;
 
     let text = response.body_reader().utf8().await?;

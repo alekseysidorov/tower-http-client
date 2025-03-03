@@ -23,7 +23,7 @@ impl State {
         let response = self
             .client
             .get(format!("{}/hello", self.host))
-            .send()?
+            .send()
             .await?;
 
         anyhow::ensure!(response.status().is_success(), "response failed");

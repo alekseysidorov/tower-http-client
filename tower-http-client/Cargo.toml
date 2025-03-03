@@ -31,7 +31,7 @@ tower-service = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-tower-reqwest = { version = "0.5.0", path = "../tower-reqwest" }
+tower-reqwest = { workspace = true }
 
 anyhow = { workspace = true }
 reqwest = { workspace = true }
@@ -54,6 +54,14 @@ required-features = ["reqwest"]
 [[example]]
 name = "retry"
 required-features = ["reqwest"]
+
+[[example]]
+name = "send_json"
+required-features = ["reqwest", "json"]
+
+[[example]]
+name = "send_form"
+required-features = ["reqwest", "form"]
 
 [[test]]
 name = "service_ext"

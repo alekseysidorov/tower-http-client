@@ -8,6 +8,18 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Added a `form` method to the `BodyReader` to decode form data.
+
+- **breaking:** Split the old `ClientRequest` into separate builder and request
+  structs with updated error handling.
+
+- Introduced a `RequestBuilderExt` trait to extend the `http::request::Builder`
+  with additional methods to send a form data and a JSON objects.
+
+- Bump minimum supported Rust version to `1.81`.
+
+- **breaking:** Made `request_builder` module private.
+
 - Added a `form` method to the `ClientRequest` to send a form data.
 
 - **breaking:** Removed the own implementation of the `BoxCloneSyncService`,
