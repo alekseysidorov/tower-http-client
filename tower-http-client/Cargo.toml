@@ -19,6 +19,7 @@ bytes = { workspace = true }
 futures-util = { workspace = true }
 http = { workspace = true }
 http-body = { workspace = true }
+http-body-reader = { workspace = true }
 http-body-util = { workspace = true }
 include-utils = { workspace = true }
 serde = { workspace = true }
@@ -43,9 +44,9 @@ wiremock = { workspace = true }
 
 [features]
 default = ["json", "reqwest", "form"]
-json = ["dep:serde_json"]
+json = ["dep:serde_json", "http-body-reader/json"]
 reqwest = ["dep:tower-reqwest"]
-form = ["dep:serde_urlencoded"]
+form = ["dep:serde_urlencoded", "http-body-reader/form"]
 
 [[example]]
 name = "rate_limiter"

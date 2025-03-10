@@ -8,6 +8,9 @@ and this project adheres to
 
 ## [Unreleased]
 
+- **breaking** `body_reader` implementation has been replaced with the
+  `http_body_reader` crate.
+
 - Added a `form` method to the `BodyReader` to decode form data.
 
 - **breaking:** Split the old `ClientRequest` into separate builder and request
