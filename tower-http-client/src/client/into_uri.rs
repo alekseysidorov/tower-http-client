@@ -12,7 +12,7 @@ use private::Sealed;
 /// that implements [`TryInto<Uri>`]. This approach can pass third-party types  like [`url::Url`]
 /// directly to the [`http::request::Builder::uri`] without any wrappers.
 pub trait IntoUri: Sealed {
-    ///Which kind of value should be converted to the Uri via [`TryInto<Uri>`]
+    /// Which kind of value should be converted to the Uri via [`TryInto<Uri>`]
     type TryInto;
     /// Converts this value into the input type for the [`TryInto<Uri>`] conversion.
     fn into_uri(self) -> Self::TryInto;
