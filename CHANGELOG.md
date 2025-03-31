@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.5.0] - 2025.03.31
+
 - **breaking** `body_reader` implementation has been replaced with the
   `http_body_reader` crate.
 
