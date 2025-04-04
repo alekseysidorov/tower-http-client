@@ -126,3 +126,40 @@ async fn test_service_ext_put_json() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[cfg(feature = "typed_header")]
+#[tokio::test]
+async fn test_service_ext_typed_header() -> anyhow::Result<()> {
+    use headers::{HeaderMapExt as _, UserAgent};
+    use wiremock::Request;
+
+    let (mock_server, mock_uri) = utils::start_mock_server().await;
+
+    Mock::given(method("GET"))
+        .and(path("/hello"))
+        .respond_with(|req: &Request| {
+            assert_eq!(
+                req.headers.typed_get::<UserAgent>().unwrap(),
+                UserAgent::from_static("wiremock")
+            );
+
+            ResponseTemplate::new(200)
+        })
+        // Mounting the mock on the mock server - it's now effective!
+        .mount(&mock_server)
+        .await;
+
+    let mut client = ServiceBuilder::new()
+        .layer(HttpClientLayer)
+        .service(Client::new());
+
+    let response = client
+        .get(format!("{mock_uri}/hello"))
+        .typed_header(UserAgent::from_static("wiremock"))
+        .send()
+        .await?;
+
+    assert!(response.status().is_success());
+
+    Ok(())
+}
