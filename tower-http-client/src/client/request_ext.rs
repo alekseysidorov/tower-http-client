@@ -43,6 +43,18 @@ pub trait RequestBuilderExt: Sized {
         self,
         form: &T,
     ) -> Result<http::Request<String>, SetBodyError<serde_urlencoded::ser::Error>>;
+
+    /// Appends a typed header to this request.
+    ///
+    /// This function will append the provided header as a header to the
+    /// internal [`http::HeaderMap`] being constructed.  Essentially this is
+    /// equivalent to calling [`headers::HeaderMapExt::typed_insert`].
+    #[must_use]
+    #[cfg(feature = "typed_header")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "typed_header")))]
+    fn typed_header<T>(self, header: T) -> Self
+    where
+        T: headers::Header;
 }
 
 impl RequestBuilderExt for http::request::Builder {
@@ -78,5 +90,19 @@ impl RequestBuilderExt for http::request::Builder {
             );
         }
         self.body(string).map_err(SetBodyError::Body)
+    }
+
+    #[cfg(feature = "typed_header")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "typed_header")))]
+    fn typed_header<T>(mut self, header: T) -> Self
+    where
+        T: headers::Header,
+    {
+        use headers::HeaderMapExt;
+
+        if let Some(headers) = self.headers_mut() {
+            headers.typed_insert(header);
+        }
+        self
     }
 }

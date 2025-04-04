@@ -184,6 +184,24 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
         })
     }
 
+    /// Appends a typed header to this request.
+    ///
+    /// This function will append the provided header as a header to the
+    /// internal [`HeaderMap`] being constructed.  Essentially this is
+    /// equivalent to calling [`headers::HeaderMapExt::typed_insert`].
+    #[must_use]
+    #[cfg(feature = "typed_header")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "typed_header")))]
+    pub fn typed_header<T>(mut self, header: T) -> Self
+    where
+        T: headers::Header,
+    {
+        use super::RequestBuilderExt as _;
+
+        self.builder = self.builder.typed_header(header);
+        self
+    }
+
     /// Consumes this builder and returns a constructed request without a body.
     ///
     /// # Errors
