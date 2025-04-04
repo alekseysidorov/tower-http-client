@@ -1,5 +1,6 @@
 //! Extensions for the `http::request::Builder`.
 
+use private::Sealed;
 use thiserror::Error;
 
 /// Set body errors.
@@ -13,7 +14,7 @@ pub enum SetBodyError<S> {
 }
 
 /// Extension trait for the [`http::request::Builder`].
-pub trait RequestBuilderExt: Sized {
+pub trait RequestBuilderExt: Sized + Sealed {
     /// Sets a JSON body for this request.
     ///
     /// Additionally this method adds a `CONTENT_TYPE` header for JSON body.
@@ -105,4 +106,10 @@ impl RequestBuilderExt for http::request::Builder {
         }
         self
     }
+}
+
+mod private {
+    pub trait Sealed {}
+
+    impl Sealed for http::request::Builder {}
 }
