@@ -8,8 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.5.1] - 2025.04.04
+
 - Added a `typed_header` method to the `ClientRequest` and `RequestBuilderExt`
   for typed header insertion.
+
+- Maked trait `RequestBuilderExt` sealed.
 
 ## [0.5.0] - 2025.03.31
 
