@@ -13,7 +13,7 @@ and this project adheres to
 - Added a `typed_header` method to the `ClientRequest` and `RequestBuilderExt`
   for typed header insertion.
 
-- Maked trait `RequestBuilderExt` sealed.
+- Made trait `RequestBuilderExt` sealed.
 
 ## [0.5.0] - 2025.03.31
 
