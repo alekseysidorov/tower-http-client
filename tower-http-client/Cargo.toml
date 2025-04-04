@@ -44,11 +44,11 @@ tower-http = { workspace = true, features = ["set-header", "util", "map-request-
 wiremock = { workspace = true }
 
 [features]
-default = ["json", "reqwest", "form", "typed_header"]
+default = ["json", "reqwest", "form", "typed-header"]
 json = ["dep:serde_json", "http-body-reader/json"]
 reqwest = ["dep:tower-reqwest"]
 form = ["dep:serde_urlencoded", "http-body-reader/form"]
-typed_header = ["dep:headers"]
+typed-header = ["dep:headers"]
 
 [[example]]
 name = "rate_limiter"

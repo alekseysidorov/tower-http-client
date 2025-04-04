@@ -5,7 +5,7 @@ members = ["tower-http-client", "tower-reqwest"]
 [workspace.package]
 edition = "2021"
 rust-version = "1.81"
-version = "0.5.1"
+version = "0.5.2"
 categories = [
   "asynchronous",
   "network-programming",

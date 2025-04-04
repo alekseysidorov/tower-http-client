@@ -190,7 +190,7 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     /// internal [`HeaderMap`] being constructed.  Essentially this is
     /// equivalent to calling [`headers::HeaderMapExt::typed_insert`].
     #[must_use]
-    #[cfg(feature = "typed_header")]
+    #[cfg(feature = "typed-header")]
     #[cfg_attr(docsrs, doc(cfg(feature = "typed_header")))]
     pub fn typed_header<T>(mut self, header: T) -> Self
     where

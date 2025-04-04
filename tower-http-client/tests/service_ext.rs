@@ -127,7 +127,7 @@ async fn test_service_ext_put_json() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "typed_header")]
+#[cfg(feature = "typed-header")]
 #[tokio::test]
 async fn test_service_ext_typed_header() -> anyhow::Result<()> {
     use headers::{HeaderMapExt as _, UserAgent};
