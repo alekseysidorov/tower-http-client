@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Add the `MakeHeaderValue` trait bound to the `SetRequestHeaderLayer`
+  generic parameter in the `tower-request` crate (otherwise the resulting
+  type won't implement `Service`)
+
 ## [0.5.1] - 2025.04.04
 
 - Added a `typed_header` method to the `ClientRequest` and `RequestBuilderExt`
