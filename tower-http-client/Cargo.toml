@@ -16,6 +16,7 @@ rust-version.workspace = true
 tower-reqwest = { workspace = true, optional = true }
 
 bytes = { workspace = true }
+criterion = { workspace = true, features = ["async_tokio"] }
 futures-util = { workspace = true }
 headers = { workspace = true, optional = true }
 http = { workspace = true }
@@ -36,7 +37,10 @@ url = { workspace = true }
 tower-reqwest = { workspace = true }
 
 anyhow = { workspace = true }
+async-trait = { workspace = true }
+axum = { workspace = true }
 reqwest = { workspace = true }
+reqwest-middleware = { workspace = true }
 retry-policies = { workspace = true }
 tokio = { workspace = true }
 tower = { workspace = true, features = ["util", "buffer", "limit", "retry"] }
@@ -49,6 +53,13 @@ json = ["dep:serde_json", "http-body-reader/json"]
 reqwest = ["dep:tower-reqwest"]
 form = ["dep:serde_urlencoded", "http-body-reader/form"]
 typed-header = ["dep:headers"]
+
+[lints]
+workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [[example]]
 name = "rate_limiter"
@@ -70,9 +81,6 @@ required-features = ["reqwest", "form"]
 name = "service_ext"
 required-features = ["reqwest"]
 
-[lints]
-workspace = true
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
+[[bench]]
+name = "client"
+harness = false

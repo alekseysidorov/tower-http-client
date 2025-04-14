@@ -76,6 +76,14 @@
           '';
         };
 
+        benchmarks = writeShellApplication {
+          name = "ci-run-benchmarks";
+          runtimeInputs = with pkgs; [ rustToolchains.stable ] ++ runtimeInputs;
+          text = ''
+            cargo bench --workspace --all-features
+          '';
+        };
+
         semver_checks = writeShellApplication {
           name = "ci-run-semver-checks";
           runtimeInputs = with pkgs; [
@@ -119,6 +127,7 @@
           ci.lints
           ci.tests
           ci.semver_checks
+          ci.benchmarks
         ];
       };
 
@@ -133,6 +142,7 @@
         ci-lints = mkCommandDefault "ci-run-lints";
         ci-tests = mkCommandDefault "ci-run-tests";
         ci-semver-checks = mkCommandDefault "ci-run-semver-checks";
+        ci-benchmarks = mkCommandDefault "ci-run-benchmarks";
         ci-all = mkCommandDefault "ci-run-all";
         git-install-hooks = pkgs.writeShellScriptBin "install-git-hook"
           ''
