@@ -115,7 +115,10 @@ impl<M> fmt::Debug for SetRequestHeaderLayer<M> {
     }
 }
 
-impl<M> SetRequestHeaderLayer<M> {
+impl<M> SetRequestHeaderLayer<M>
+where
+    M: MakeHeaderValue<reqwest::Request>,
+{
     /// Create a new [`SetRequestHeaderLayer`].
     ///
     /// If a previous value exists for the same header, it is removed and replaced with the new
