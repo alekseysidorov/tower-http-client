@@ -42,9 +42,15 @@ axum = { workspace = true }
 reqwest = { workspace = true }
 reqwest-middleware = { workspace = true }
 retry-policies = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
 tokio = { workspace = true }
 tower = { workspace = true, features = ["util", "buffer", "limit", "retry"] }
-tower-http = { workspace = true, features = ["set-header", "util", "map-request-body"] }
+tower-http = { workspace = true, features = [
+  "set-header",
+  "util",
+  "map-request-body",
+  "map-response-body",
+] }
 wiremock = { workspace = true }
 
 [features]
