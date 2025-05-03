@@ -19,17 +19,18 @@ type HttpClient = BoxCloneSyncService<
 /// Convert a `reqwest::Client` into an implementation-agnostic opaque client.
 fn into_opaque_http_client(
     client: reqwest::Client,
-) -> impl Service<
+) -> impl Send
+       + Clone
+       + Service<
     http::Request<CloneableBody>,
     Response = http::Response<BoxBody<Bytes, BoxError>>,
     Error = BoxError,
     Future = impl Send,
-> + Send
-       + Clone {
+> {
     ServiceBuilder::new()
         .map_err(BoxError::from)
         .map_response_body(|body: reqwest::Body| body.map_err(BoxError::from).boxed())
-        .map_request_body(|body: CloneableBody| into_reqwest_body(body))
+        .map_request_body(into_reqwest_body)
         .layer(HttpClientLayer)
         .service(client)
 }
