@@ -39,12 +39,19 @@ tower-reqwest = { workspace = true }
 anyhow = { workspace = true }
 async-trait = { workspace = true }
 axum = { workspace = true }
-reqwest = { workspace = true }
+reqwest = { workspace = true, features = ["json"] }
 reqwest-middleware = { workspace = true }
 retry-policies = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 tokio = { workspace = true }
 tower = { workspace = true, features = ["util", "buffer", "limit", "retry"] }
-tower-http = { workspace = true, features = ["set-header", "util", "map-request-body"] }
+tower-http = { workspace = true, features = [
+  "set-header",
+  "util",
+  "map-request-body",
+  "map-response-body",
+] }
 wiremock = { workspace = true }
 
 [features]
@@ -77,10 +84,15 @@ required-features = ["reqwest", "json"]
 name = "send_form"
 required-features = ["reqwest", "form"]
 
+[[example]]
+name = "boxed_client"
+required-features = ["reqwest", "json"]
+
 [[test]]
 name = "service_ext"
 required-features = ["reqwest"]
 
 [[bench]]
 name = "client"
+required-features = ["reqwest", "json"]
 harness = false
