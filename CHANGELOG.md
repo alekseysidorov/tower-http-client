@@ -8,9 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
-- Add the `MakeHeaderValue` trait bound to the `SetRequestHeaderLayer`
+- Added the `MakeHeaderValue` trait bound to the `SetRequestHeaderLayer`
   generic parameter in the `tower-request` crate (otherwise the resulting
   type won't implement `Service`)
+  
+- Bumped minimum supported Rust version to `1.85` and changed Rust edition to
+  `2024`.
 
 ## [0.5.1] - 2025.04.04
 

@@ -99,16 +99,16 @@ where
 
 #[cfg(test)]
 mod tests {
-    use http::{header::USER_AGENT, HeaderName, HeaderValue};
+    use http::{HeaderName, HeaderValue, header::USER_AGENT};
     use http_body_util::BodyExt;
     use pretty_assertions::assert_eq;
     use reqwest::Client;
     use serde::{Deserialize, Serialize};
     use tower::{Service, ServiceBuilder, ServiceExt};
-    use tower_http::{request_id::MakeRequestUuid, ServiceBuilderExt};
+    use tower_http::{ServiceBuilderExt, request_id::MakeRequestUuid};
     use wiremock::{
-        matchers::{method, path},
         Mock, MockServer, ResponseTemplate,
+        matchers::{method, path},
     };
 
     use crate::HttpClientLayer;

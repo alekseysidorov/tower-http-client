@@ -65,11 +65,11 @@ impl RequestBuilderExt for http::request::Builder {
         mut self,
         value: &T,
     ) -> Result<http::Request<bytes::Bytes>, SetBodyError<serde_json::Error>> {
-        use http::{header::CONTENT_TYPE, HeaderValue};
+        use http::{HeaderValue, header::CONTENT_TYPE};
 
         if let Some(headers) = self.headers_mut() {
             headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-        };
+        }
 
         let bytes = bytes::Bytes::from(serde_json::to_vec(value).map_err(SetBodyError::Encode)?);
         self.body(bytes).map_err(SetBodyError::Body)
@@ -81,7 +81,7 @@ impl RequestBuilderExt for http::request::Builder {
         mut self,
         form: &T,
     ) -> Result<http::Request<String>, SetBodyError<serde_urlencoded::ser::Error>> {
-        use http::{header::CONTENT_TYPE, HeaderValue};
+        use http::{HeaderValue, header::CONTENT_TYPE};
 
         let string = serde_urlencoded::to_string(form).map_err(SetBodyError::Encode)?;
         if let Some(headers) = self.headers_mut() {

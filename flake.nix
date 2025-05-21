@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     fenix.url = "github:nix-community/fenix/monthly";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-utils.url = "github:numtide/flake-utils";
@@ -16,8 +16,8 @@
     let
       # Minimum supported Rust version
       msrv = {
-        name = "1.81.0";
-        sha256 = "sha256-VZZnlyP69+Y3crrLHQyJirqlHrTtGTsyiSnZB8jEvVo=";
+        name = "1.85.1";
+        sha256 = "sha256-Hn2uaQzRLidAWpfmRwSRdImifGUCAb9HeAqTYFXWeQk=";
       };
       # Setup nixpkgs
       pkgs = import nixpkgs {
@@ -76,6 +76,14 @@
           '';
         };
 
+        benchmarks = writeShellApplication {
+          name = "ci-run-benchmarks";
+          runtimeInputs = with pkgs; [ rustToolchains.stable ] ++ runtimeInputs;
+          text = ''
+            cargo bench --workspace --all-features
+          '';
+        };
+
         semver_checks = writeShellApplication {
           name = "ci-run-semver-checks";
           runtimeInputs = with pkgs; [
@@ -119,6 +127,7 @@
           ci.lints
           ci.tests
           ci.semver_checks
+          ci.benchmarks
         ];
       };
 
@@ -133,6 +142,7 @@
         ci-lints = mkCommandDefault "ci-run-lints";
         ci-tests = mkCommandDefault "ci-run-tests";
         ci-semver-checks = mkCommandDefault "ci-run-semver-checks";
+        ci-benchmarks = mkCommandDefault "ci-run-benchmarks";
         ci-all = mkCommandDefault "ci-run-all";
         git-install-hooks = pkgs.writeShellScriptBin "install-git-hook"
           ''

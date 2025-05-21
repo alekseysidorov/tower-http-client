@@ -1,12 +1,12 @@
-use http::{header::USER_AGENT, HeaderValue};
+use http::{HeaderValue, header::USER_AGENT};
 use reqwest::Client;
 use tower::ServiceBuilder;
 use tower_http::ServiceBuilderExt;
 use tower_http_client::client::ServiceExt as _;
 use tower_reqwest::HttpClientLayer;
 use wiremock::{
-    matchers::{method, path},
     Mock, ResponseTemplate,
+    matchers::{method, path},
 };
 
 mod utils;

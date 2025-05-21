@@ -10,9 +10,10 @@ jobs:
       - uses: cachix/install-nix-action@v25
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-      - uses: cachix/cachix-action@v14
+      - uses: cachix/cachix-action@v16
         with:
-          name: nixpkgs-cross-overlay
+          name: alekseysidorov-ci
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: "Check formatting"
         run: nix flake check
@@ -34,9 +35,10 @@ jobs:
       - uses: cachix/install-nix-action@v25
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-      - uses: cachix/cachix-action@v14
+      - uses: cachix/cachix-action@v16
         with:
-          name: nixpkgs-cross-overlay
+          name: alekseysidorov-ci
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: "Run cargo tests"
         run: nix run .#ci-tests

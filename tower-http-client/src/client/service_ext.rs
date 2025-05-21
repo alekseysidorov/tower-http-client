@@ -3,7 +3,7 @@ use std::future::Future;
 use http::{Method, Uri};
 use tower_service::Service;
 
-use super::{client_request::ClientRequestBuilder, ClientRequest, IntoUri};
+use super::{ClientRequest, IntoUri, client_request::ClientRequestBuilder};
 
 /// An extension trait for Tower HTTP services with the typical client methods.
 ///
