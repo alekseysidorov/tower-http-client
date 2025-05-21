@@ -1,14 +1,14 @@
 use std::time::Duration;
 
 use bytes::Bytes;
-use criterion::{criterion_group, criterion_main, Criterion};
-use http::{header::USER_AGENT, HeaderName, HeaderValue};
-use http_body_util::{combinators::BoxBody, BodyExt as _};
+use criterion::{Criterion, criterion_group, criterion_main};
+use http::{HeaderName, HeaderValue, header::USER_AGENT};
+use http_body_util::{BodyExt as _, combinators::BoxBody};
 use tokio::time::Instant;
-use tower::{util::BoxCloneSyncService, BoxError, ServiceBuilder};
+use tower::{BoxError, ServiceBuilder, util::BoxCloneSyncService};
 use tower_http::ServiceBuilderExt;
 use tower_http_client::{ResponseExt as _, ServiceExt as _};
-use tower_reqwest::{into_reqwest_body, HttpClientLayer};
+use tower_reqwest::{HttpClientLayer, into_reqwest_body};
 
 /// A body that can be cloned in order to be sent multiple times.
 type CloneableBody = http_body_util::Full<Bytes>;
@@ -90,12 +90,12 @@ where
                 for attempt in 0..=max_attempts {
                     match reqwest::get(format!("http://{server_addr}/hello")).await {
                         Ok(_) => break,
+
                         Err(err) if attempt == max_attempts => {
                             panic!("Server failed to start: {err}")
                         }
                         Err(_) => {
                             tokio::time::sleep(Duration::from_millis(100)).await;
-                            continue;
                         }
                     }
                 }

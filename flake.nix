@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     fenix.url = "github:nix-community/fenix/monthly";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-utils.url = "github:numtide/flake-utils";
@@ -16,8 +16,8 @@
     let
       # Minimum supported Rust version
       msrv = {
-        name = "1.81.0";
-        sha256 = "sha256-VZZnlyP69+Y3crrLHQyJirqlHrTtGTsyiSnZB8jEvVo=";
+        name = "1.85.1";
+        sha256 = "sha256-Hn2uaQzRLidAWpfmRwSRdImifGUCAb9HeAqTYFXWeQk=";
       };
       # Setup nixpkgs
       pkgs = import nixpkgs {

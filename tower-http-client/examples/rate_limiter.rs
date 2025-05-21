@@ -6,8 +6,8 @@ use tower::{ServiceBuilder, ServiceExt as _};
 use tower_http_client::ServiceExt as _;
 use tower_reqwest::HttpClientLayer;
 use wiremock::{
-    matchers::{method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{method, path},
 };
 
 type HttpClient = tower::util::BoxCloneService<Request<Body>, Response<Body>, anyhow::Error>;

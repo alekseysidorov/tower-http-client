@@ -4,8 +4,8 @@ use tower_layer::Layer as _;
 use tower_reqwest::auth::AddAuthorizationLayer;
 use tower_service::Service as _;
 use wiremock::{
-    matchers::{method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{method, path},
 };
 
 #[tokio::main]

@@ -261,8 +261,8 @@ mod tests {
     use tower_layer::Layer;
     use tower_service::Service;
     use wiremock::{
-        matchers::{method, path},
         Mock, MockServer, ResponseTemplate,
+        matchers::{method, path},
     };
 
     use crate::set_header::SetRequestHeaderLayer;

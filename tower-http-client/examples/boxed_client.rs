@@ -1,10 +1,10 @@
 use bytes::Bytes;
 use headers::{HeaderMapExt, UserAgent};
-use http_body_util::{combinators::BoxBody, BodyExt as _};
+use http_body_util::{BodyExt as _, combinators::BoxBody};
 use serde::Deserialize;
-use tower::{util::BoxCloneSyncService, BoxError, Service, ServiceBuilder};
+use tower::{BoxError, Service, ServiceBuilder, util::BoxCloneSyncService};
 use tower_http::ServiceBuilderExt;
-use tower_http_client::{adapters::reqwest::into_reqwest_body, ResponseExt as _, ServiceExt};
+use tower_http_client::{ResponseExt as _, ServiceExt, adapters::reqwest::into_reqwest_body};
 use tower_reqwest::HttpClientLayer;
 
 /// A body that can be cloned in order to be sent multiple times.
@@ -20,8 +20,8 @@ type HttpClient = BoxCloneSyncService<
 fn into_opaque_http_client(
     client: reqwest::Client,
 ) -> impl Send
-       + Clone
-       + Service<
++ Clone
++ Service<
     http::Request<CloneableBody>,
     Response = http::Response<BoxBody<Bytes, BoxError>>,
     Error = BoxError,
