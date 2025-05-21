@@ -3,10 +3,10 @@ use serde::{Deserialize, Serialize};
 use tower::{ServiceBuilder, ServiceExt as _};
 use tower_http::ServiceBuilderExt as _;
 use tower_http_client::{ResponseExt as _, ServiceExt as _};
-use tower_reqwest::{into_reqwest_body, HttpClientLayer};
+use tower_reqwest::{HttpClientLayer, into_reqwest_body};
 use wiremock::{
-    matchers::{method, path},
     Mock, MockServer, ResponseTemplate,
+    matchers::{method, path},
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

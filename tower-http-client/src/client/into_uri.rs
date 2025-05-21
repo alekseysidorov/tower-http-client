@@ -1,6 +1,6 @@
 use http::{
-    uri::{self},
     Uri,
+    uri::{self},
 };
 use private::Sealed;
 
@@ -107,7 +107,7 @@ impl<'a> IntoUri for &'a url::Url {
 }
 
 mod private {
-    use http::{uri, Uri};
+    use http::{Uri, uri};
     use url::Url;
 
     pub trait Sealed {}
