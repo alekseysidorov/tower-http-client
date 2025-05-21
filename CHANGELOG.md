@@ -8,6 +8,9 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Bumped minimum supported Rust version to `1.85` and changed Rust edition to
+  `2024`.
+
 ## [0.5.1] - 2025.04.04
 
 - Added a `typed_header` method to the `ClientRequest` and `RequestBuilderExt`

@@ -1,11 +1,11 @@
 [workspace]
-resolver = "2"
+resolver = "3"
 members = ["tower-http-client", "tower-reqwest"]
 
 [workspace.package]
-edition = "2021"
-rust-version = "1.81"
-version = "0.5.2"
+edition = "2024"
+rust-version = "1.85"
+version = "0.5.3"
 categories = [
   "asynchronous",
   "network-programming",

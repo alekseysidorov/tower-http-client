@@ -16,8 +16,8 @@
     let
       # Minimum supported Rust version
       msrv = {
-        name = "1.81.0";
-        sha256 = "sha256-VZZnlyP69+Y3crrLHQyJirqlHrTtGTsyiSnZB8jEvVo=";
+        name = "1.85.0";
+        sha256 = "sha256-AJ6LX/Q/Er9kS15bn9iflkUwcgYqRQxiOIL2ToVAXaU=";
       };
       # Setup nixpkgs
       pkgs = import nixpkgs {
