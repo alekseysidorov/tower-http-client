@@ -75,10 +75,10 @@ impl InsertHeaderMode {
                 }
             }
             InsertHeaderMode::IfNotPresent => {
-                if !target.headers().contains_key(header_name) {
-                    if let Some(value) = make.make_header_value(target) {
-                        target.headers_mut().insert(header_name.clone(), value);
-                    }
+                if !target.headers().contains_key(header_name)
+                    && let Some(value) = make.make_header_value(target)
+                {
+                    target.headers_mut().insert(header_name.clone(), value);
                 }
             }
             InsertHeaderMode::Append => {

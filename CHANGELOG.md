@@ -15,6 +15,7 @@ and this project adheres to
 - Added `From<ClientRequest>` implementation for `http::Request` and
   `From<ClientRequestBuilder>` for `http::request::Builder` to help with
   debugging and testing.
+- Bump minimum supported Rust version to `1.88.0`.
 
 ## [0.5.2] - 2025.04.04
 

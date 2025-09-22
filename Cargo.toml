@@ -4,7 +4,7 @@ members = ["tower-http-client", "tower-reqwest"]
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 version = "0.5.3"
 categories = [
   "asynchronous",
