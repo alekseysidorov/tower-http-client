@@ -18,7 +18,6 @@ const EMPTY_BODY: EmptyBody = ();
 /// constructed request. Also, this builder borrows most useful methods from the [`reqwest`] one.
 ///
 /// [`reqwest`]: https://docs.rs/reqwest/latest/reqwest/struct.RequestBuilder.html
-#[derive(Debug)]
 pub struct ClientRequestBuilder<'a, S, Err, RespBody> {
     service: &'a mut S,
     builder: http::request::Builder,
@@ -220,10 +219,23 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     }
 }
 
+impl<S, Err, RespBody> std::fmt::Debug for ClientRequestBuilder<'_, S, Err, RespBody> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ClientRequestBuilder")
+            .field("builder", &self.builder)
+            .finish_non_exhaustive()
+    }
+}
+
+impl<S, Err, RespBody> From<ClientRequestBuilder<'_, S, Err, RespBody>> for http::request::Builder {
+    fn from(builder: ClientRequestBuilder<'_, S, Err, RespBody>) -> Self {
+        builder.builder
+    }
+}
+
 /// An [`http::Request`] wrapper with a reference to a client.
 ///
 /// This struct is used to send constructed HTTP request by using a client.
-#[derive(Debug)]
 pub struct ClientRequest<'a, S, Err, ReqBody, RespBody> {
     service: &'a mut S,
     request: http::Request<ReqBody>,
@@ -271,18 +283,37 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     }
 }
 
-impl<'a, S, Err, R, RespBody> ClientRequest<'a, S, Err, R, RespBody> {
+impl<'a, S, Err, ReqBody, RespBody> ClientRequest<'a, S, Err, ReqBody, RespBody> {
     /// Sends the request to the target URI.
-    pub fn send<ReqBody>(
+    pub fn send<R>(
         self,
     ) -> impl Future<Output = Result<http::Response<RespBody>, Err>> + Captures<&'a ()>
     where
-        S: Service<http::Request<ReqBody>, Response = http::Response<RespBody>, Error = Err>,
+        S: Service<http::Request<R>, Response = http::Response<RespBody>, Error = Err>,
         S::Future: Send + 'static,
         S::Error: 'static,
-        ReqBody: From<R>,
+        R: From<ReqBody>,
     {
         self.service.execute(self.request)
+    }
+}
+
+impl<S, Err, ReqBody, RespBody> std::fmt::Debug for ClientRequest<'_, S, Err, ReqBody, RespBody>
+where
+    ReqBody: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ClientRequest")
+            .field("request", &self.request)
+            .finish_non_exhaustive()
+    }
+}
+
+impl<S, Err, ReqBody, RespBody> From<ClientRequest<'_, S, Err, ReqBody, RespBody>>
+    for http::Request<ReqBody>
+{
+    fn from(request: ClientRequest<'_, S, Err, ReqBody, RespBody>) -> Self {
+        request.request
     }
 }
 
