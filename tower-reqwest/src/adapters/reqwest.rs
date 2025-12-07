@@ -34,23 +34,16 @@ where
     }
 }
 
-#[pin_project]
 /// Future that resolves to the response or failure to connect.
+#[pin_project(project = ExecuteRequestFutureProj)]
 #[derive(Debug)]
-pub struct ExecuteRequestFuture<S>
+pub enum ExecuteRequestFuture<S>
 where
     S: Service<reqwest::Request>,
 {
-    #[pin]
-    inner: Inner<S::Future>,
-}
-
-#[pin_project(project = InnerProj)]
-#[derive(Debug)]
-enum Inner<F> {
     Future {
         #[pin]
-        fut: F,
+        fut: S::Future,
     },
     Error {
         error: Option<crate::Error>,
@@ -62,13 +55,12 @@ where
     S: Service<reqwest::Request>,
 {
     fn new(future: Result<S::Future, reqwest::Error>) -> Self {
-        let inner = match future {
-            Ok(fut) => Inner::Future { fut },
-            Err(error) => Inner::Error {
+        match future {
+            Ok(fut) => Self::Future { fut },
+            Err(error) => Self::Error {
                 error: Some(error.into()),
             },
-        };
-        Self { inner }
+        }
     }
 }
 
@@ -84,12 +76,11 @@ where
         self: std::pin::Pin<&mut Self>,
         cx: &mut std::task::Context<'_>,
     ) -> std::task::Poll<Self::Output> {
-        let this = self.project();
-        match this.inner.project() {
-            InnerProj::Future { fut } => {
+        match self.project() {
+            ExecuteRequestFutureProj::Future { fut } => {
                 fut.poll(cx).map_ok(From::from).map_err(crate::Error::from)
             }
-            InnerProj::Error { error } => {
+            ExecuteRequestFutureProj::Error { error } => {
                 let error = error.take().expect("Polled after ready");
                 Poll::Ready(Err(error))
             }

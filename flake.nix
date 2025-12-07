@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     fenix.url = "github:nix-community/fenix/monthly";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-utils.url = "github:numtide/flake-utils";
@@ -27,7 +27,7 @@
           fenix.overlays.default
           (final: prev: {
             rustToolchains = {
-              stable = prev.fenix.stable.defaultToolchain;
+              stable = prev.fenix.stable.completeToolchain;
               msrv = (prev.fenix.fromToolchainName msrv).defaultToolchain;
               nightly = (prev.fenix.complete.withComponents [ "rustfmt" ]);
             };
