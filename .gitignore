@@ -21,6 +21,7 @@ Cargo.lock
 
 # Nix files
 .direnv/
+treefmt.toml
 
 # IDE
 .vscode/
