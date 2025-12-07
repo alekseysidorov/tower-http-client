@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     fenix.url = "github:nix-community/fenix/monthly";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-utils.url = "github:numtide/flake-utils";
@@ -33,14 +33,6 @@
           nightly = fenixPackage.complete.withComponents [ "rustfmt" ];
         };
 
-        # Setup runtime dependencies
-        runtimeInputs = with pkgs; [
-          cargo-nextest
-          openssl
-          pkg-config
-          stdenv.cc
-        ];
-
         # Eval the treefmt configuration
         treefmtConfig = {
           projectRootFile = "flake.nix";
@@ -57,6 +49,13 @@
           };
         };
         treefmt = (treefmt-nix.lib.evalModule pkgs treefmtConfig).config.build;
+
+        # Runtime inputs for all CI scripts
+        runtimeInputs = with pkgs; [
+          cargo-nextest
+          openssl
+          pkg-config
+        ];
 
         # CI scripts
         ci = {
