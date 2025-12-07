@@ -7,12 +7,12 @@
   };
 
   outputs =
-    { self
-    , nixpkgs
-    , flake-utils
-    , fenix
-    , treefmt-nix
-    ,
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      fenix,
+      treefmt-nix,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
