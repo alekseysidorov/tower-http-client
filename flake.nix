@@ -7,12 +7,12 @@
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      flake-utils,
-      fenix,
-      treefmt-nix,
+    { self
+    , nixpkgs
+    , flake-utils
+    , fenix
+    , treefmt-nix
+    ,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -38,6 +38,7 @@
           cargo-nextest
           openssl
           pkg-config
+          stdenv.cc
         ];
 
         # Eval the treefmt configuration
@@ -144,14 +145,6 @@
         };
 
         packages = {
-          inherit (ci)
-            all
-            lints
-            tests
-            semver_checks
-            benchmarks
-            ;
-
           ci-all = ci.all;
           ci-lints = ci.lints;
           ci-tests = ci.tests;
