@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     fenix.url = "github:nix-community/fenix/monthly";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-utils.url = "github:numtide/flake-utils";
@@ -19,6 +19,7 @@
       let
         # Common nix packages
         pkgs = nixpkgs.legacyPackages.${system};
+
         # Fenix Rust toolchains
         fenixPackage = fenix.packages.${system};
         # Minimum supported Rust version
@@ -100,11 +101,19 @@
 
           semver_checks = pkgs.writeShellApplication {
             name = "ci-run-semver-checks";
-            runtimeInputs = [
-              rustToolchains.msrv
-              pkgs.cargo-semver-checks
-            ]
-            ++ runtimeInputs;
+            runtimeInputs =
+              let
+                # FIXME: Remove this override once https://github.com/NixOS/nixpkgs/issues/413204 is fixed.
+                cargo-semver-checks = pkgs.cargo-semver-checks.overrideAttrs (old: {
+                  doCheck = false;
+                  checkPhase = "true";
+                });
+              in
+              [
+                rustToolchains.msrv
+                cargo-semver-checks
+              ]
+              ++ runtimeInputs;
             text = ''cargo semver-checks'';
           };
 
