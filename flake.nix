@@ -2,6 +2,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     fenix.url = "github:nix-community/fenix/monthly";
+    crane.url = "github:ipetkov/crane";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -12,6 +13,7 @@
       nixpkgs,
       flake-utils,
       fenix,
+      crane,
       treefmt-nix,
     }:
     flake-utils.lib.eachDefaultSystem (
@@ -22,6 +24,7 @@
 
         # Fenix Rust toolchains
         fenixPackage = fenix.packages.${system};
+
         # Minimum supported Rust version
         msrv = {
           name = "1.89.0";
@@ -33,6 +36,9 @@
           msrv = (fenixPackage.fromToolchainName msrv).defaultToolchain;
           nightly = fenixPackage.complete.withComponents [ "rustfmt" ];
         };
+
+        # Crane library for building Rust packages
+        craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchains.msrv;
 
         # Eval the treefmt configuration
         treefmtConfig = {
@@ -57,6 +63,32 @@
           openssl
           pkg-config
         ];
+
+        # Source filtering for crane
+        src = craneLib.path ./.;
+
+        # Common arguments for all crane builds
+        commonArgs = {
+          inherit src;
+          pname = "tower-http-client-workspace";
+          version = "0.5.4";
+          strictDeps = true;
+          nativeBuildInputs = runtimeInputs;
+          cargoVendorDir = craneLib.vendorCargoDeps {
+            inherit src;
+          };
+        };
+
+        # Build dependencies only (for caching)
+        cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+
+        # Build the workspace
+        workspace = craneLib.buildPackage (
+          commonArgs
+          // {
+            inherit cargoArtifacts;
+          }
+        );
 
         # CI scripts
         ci = {
@@ -136,8 +168,57 @@
       {
         # for `nix fmt`
         formatter = treefmt.wrapper;
+
         # for `nix flake check`
-        checks.formatting = treefmt.check self;
+        checks = {
+          # Check formatting
+          formatting = treefmt.check self;
+
+          # Run tests with MSRV toolchain
+          tests = craneLib.cargoNextest (
+            commonArgs
+            // {
+              inherit cargoArtifacts;
+              cargoNextestExtraArgs = "--workspace --all-targets --no-default-features";
+            }
+          );
+
+          # Run tests with all features
+          tests-all-features = craneLib.cargoNextest (
+            commonArgs
+            // {
+              inherit cargoArtifacts;
+              cargoNextestExtraArgs = "--workspace --all-targets --all-features";
+            }
+          );
+
+          # Run clippy
+          clippy = craneLib.cargoClippy (
+            commonArgs
+            // {
+              inherit cargoArtifacts;
+              cargoClippyExtraArgs = "--workspace --all --all-targets --all-features -- --deny warnings";
+            }
+          );
+
+          # Run doc tests
+          doc-tests = craneLib.cargoTest (
+            commonArgs
+            // {
+              inherit cargoArtifacts;
+              cargoTestExtraArgs = "--workspace --doc --all-features";
+            }
+          );
+
+          # Check documentation builds
+          doc = craneLib.cargoDoc (
+            commonArgs
+            // {
+              inherit cargoArtifacts;
+              cargoDocExtraArgs = "--workspace --no-deps --all-features";
+            }
+          );
+        };
 
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = runtimeInputs ++ [
