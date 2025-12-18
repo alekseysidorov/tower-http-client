@@ -102,31 +102,43 @@
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
         # Helper function to create a check with common args
-        mkCheck = builder: extraArgs: builder (commonArgs // { inherit cargoArtifacts; } // extraArgs);
+        # Usage: mkCheck "nextest" "--workspace --all-targets --all-features"
+        mkCheck =
+          checkType: args:
+          let
+            checks = {
+              nextest = {
+                builder = craneLib.cargoNextest;
+                argsAttr = "cargoNextestExtraArgs";
+              };
+              clippy = {
+                builder = craneLib.cargoClippy;
+                argsAttr = "cargoClippyExtraArgs";
+              };
+              test = {
+                builder = craneLib.cargoTest;
+                argsAttr = "cargoTestExtraArgs";
+              };
+              doc = {
+                builder = craneLib.cargoDoc;
+                argsAttr = "cargoDocExtraArgs";
+              };
+            };
+            checkConfig = checks.${checkType};
+          in
+          checkConfig.builder (
+            commonArgs // { inherit cargoArtifacts; } // { ${checkConfig.argsAttr} = args; }
+          );
 
         # Define checks that can be reused in packages
         checks = {
           formatting = treefmt.check self;
 
-          tests = mkCheck craneLib.cargoNextest {
-            cargoNextestExtraArgs = "--workspace --all-targets --no-default-features";
-          };
-
-          tests-all-features = mkCheck craneLib.cargoNextest {
-            cargoNextestExtraArgs = "--workspace --all-targets --all-features";
-          };
-
-          clippy = mkCheck craneLib.cargoClippy {
-            cargoClippyExtraArgs = "--workspace --all --all-targets --all-features -- --deny warnings";
-          };
-
-          doc-tests = mkCheck craneLib.cargoTest {
-            cargoTestExtraArgs = "--workspace --doc --all-features";
-          };
-
-          doc = mkCheck craneLib.cargoDoc {
-            cargoDocExtraArgs = "--workspace --no-deps --all-features";
-          };
+          tests = mkCheck "nextest" "--workspace --all-targets --no-default-features";
+          tests-all-features = mkCheck "nextest" "--workspace --all-targets --all-features";
+          clippy = mkCheck "clippy" "--workspace --all --all-targets --all-features -- --deny warnings";
+          doc-tests = mkCheck "test" "--workspace --doc --all-features";
+          doc = mkCheck "doc" "--workspace --no-deps --all-features";
         };
       in
       {
