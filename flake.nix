@@ -105,55 +105,38 @@
           }
         );
 
+        # Helper function to create a check with common args
+        mkCheck = builder: extraArgs: builder (commonArgs // { inherit cargoArtifacts; } // extraArgs);
+
         # Define checks that can be reused in packages
         checks = {
           # Check formatting
           formatting = treefmt.check self;
 
           # Run tests with MSRV toolchain
-          tests = craneLib.cargoNextest (
-            commonArgs
-            // {
-              inherit cargoArtifacts;
-              cargoNextestExtraArgs = "--workspace --all-targets --no-default-features";
-            }
-          );
+          tests = mkCheck craneLib.cargoNextest {
+            cargoNextestExtraArgs = "--workspace --all-targets --no-default-features";
+          };
 
           # Run tests with all features
-          tests-all-features = craneLib.cargoNextest (
-            commonArgs
-            // {
-              inherit cargoArtifacts;
-              cargoNextestExtraArgs = "--workspace --all-targets --all-features";
-            }
-          );
+          tests-all-features = mkCheck craneLib.cargoNextest {
+            cargoNextestExtraArgs = "--workspace --all-targets --all-features";
+          };
 
           # Run clippy
-          clippy = craneLib.cargoClippy (
-            commonArgs
-            // {
-              inherit cargoArtifacts;
-              cargoClippyExtraArgs = "--workspace --all --all-targets --all-features -- --deny warnings";
-            }
-          );
+          clippy = mkCheck craneLib.cargoClippy {
+            cargoClippyExtraArgs = "--workspace --all --all-targets --all-features -- --deny warnings";
+          };
 
           # Run doc tests
-          doc-tests = craneLib.cargoTest (
-            commonArgs
-            // {
-              inherit cargoArtifacts;
-              cargoTestExtraArgs = "--workspace --doc --all-features";
-            }
-          );
+          doc-tests = mkCheck craneLib.cargoTest {
+            cargoTestExtraArgs = "--workspace --doc --all-features";
+          };
 
           # Check documentation builds
-          doc = craneLib.cargoDoc (
-            commonArgs
-            // {
-              inherit cargoArtifacts;
-              cargoDocExtraArgs = "--workspace --no-deps --all-features";
-            }
-          );
+          doc = mkCheck craneLib.cargoDoc {
+            cargoDocExtraArgs = "--workspace --no-deps --all-features";
+          };
         };
       in
       {
