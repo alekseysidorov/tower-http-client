@@ -31,6 +31,7 @@ use tower::{ServiceBuilder, ServiceExt};
 use tower_http::ServiceBuilderExt;
 use tower_http_client::{ServiceExt as _, ResponseExt as _};
 use tower_reqwest::HttpClientLayer;
+use wiremock::{Mock, MockServer, ResponseTemplate, matchers::{method, path}};
 
 /// Implementation agnostic HTTP client.
 type HttpClient = tower::util::BoxCloneService<
@@ -53,11 +54,21 @@ fn make_client(client: reqwest::Client) -> HttpClient {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Start a mock server for testing
+    let mock_server = MockServer::start().await;
+    
+    // Configure mock response
+    Mock::given(method("GET"))
+        .and(path("/hello"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("Hello, World!"))
+        .mount(&mock_server)
+        .await;
+
     // Create a new client.
     let mut client = make_client(reqwest::Client::new());
     // Execute request by using this service.
     let response = client
-        .get("http://ip.jsontest.com")
+        .get(format!("{}/hello", mock_server.uri()))
         .send()
         .await?;
 
