@@ -1,3 +1,18 @@
+# Nix flake for tower-http-client development and CI
+#
+# Usage:
+#   nix flake check              - Run all checks (formatting, clippy, tests, docs)
+#   nix fmt                      - Format code
+#   nix build .#check-clippy     - Run only clippy
+#   nix build .#check-tests      - Run only tests (no default features)
+#   nix build .#check-tests-all  - Run tests with all features
+#   nix build .#check-doc        - Check documentation builds
+#   nix build .#check-doc-tests  - Run doc tests
+#   nix build .#check-fmt        - Check formatting
+#   nix run .#benchmarks         - Run benchmarks
+#   nix run .#git-install-hooks  - Install git hooks (pre-commit: fmt, pre-push: full checks)
+#   nix develop                  - Enter development shell with stable Rust
+#   nix develop .#nightly        - Enter development shell with nightly Rust
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
@@ -89,12 +104,8 @@
             inherit cargoArtifacts;
           }
         );
-      in
-      {
-        # for `nix fmt`
-        formatter = treefmt.wrapper;
 
-        # for `nix flake check`
+        # Define checks that can be reused in packages
         checks = {
           # Check formatting
           formatting = treefmt.check self;
@@ -144,6 +155,13 @@
             }
           );
         };
+      in
+      {
+        # for `nix fmt`
+        formatter = treefmt.wrapper;
+
+        # for `nix flake check`
+        inherit checks;
 
         devShells.default = pkgs.mkShell {
           nativeBuildInputs = runtimeInputs ++ [
@@ -166,6 +184,14 @@
               cargo bench --workspace --all-features
             '';
           };
+
+          # Convenience wrappers to run specific checks
+          check-clippy = checks.clippy;
+          check-tests = checks.tests;
+          check-tests-all = checks.tests-all-features;
+          check-doc = checks.doc;
+          check-doc-tests = checks.doc-tests;
+          check-fmt = checks.formatting;
 
           git-install-hooks = pkgs.writeShellApplication {
             name = "install-git-hooks";
