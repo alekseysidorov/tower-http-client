@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Refactored `ExecuteRequestFuture` in `tower-reqwest` to remove unnecessary
+  double pinning, simplifying the internal structure.
+- Bump minimum supported Rust version to `1.89.0`.
+
 ## [0.5.3] - 2025.09.23
 
 - Improved `Debug` implementations for `ClientRequest` and
