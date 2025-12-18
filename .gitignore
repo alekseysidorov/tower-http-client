@@ -18,6 +18,7 @@ target/
 /target
 
 # Nix files
+result
 result/
 .direnv/
 treefmt.toml
