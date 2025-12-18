@@ -1,3 +1,22 @@
+# Nix flake for tower-http-client development and CI
+#
+# Usage:
+#   nix flake check              - Run all checks (formatting, clippy, tests, docs)
+#   nix fmt                      - Format code
+#
+#   nix build .#check-clippy     - Run only clippy
+#   nix build .#check-tests      - Run only tests (no default features)
+#   nix build .#check-tests-all  - Run tests with all features
+#   nix build .#check-doc        - Check documentation builds
+#   nix build .#check-doc-tests  - Run doc tests
+#   nix build .#check-fmt        - Check formatting
+#
+#   nix run .#benchmarks         - Run benchmarks
+#   nix run .#check-semver       - Run semver compatibility checks (requires network)
+#   nix run .#git-install-hooks  - Install git hooks (pre-commit: fmt, pre-push: checks + semver)
+#
+#   nix develop                  - Enter development shell with stable Rust
+#   nix develop .#nightly        - Enter development shell with nightly Rust
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
@@ -174,7 +193,13 @@
               chmod +x "$PWD/.git/hooks/pre-commit"
 
               echo "-> Installing pre-push hook"
-              echo "nix flake check" >> "$PWD/.git/hooks/pre-push"
+              cat >> "$PWD/.git/hooks/pre-push" << 'EOF'
+              #!/bin/sh
+              echo "Running flake checks..."
+              nix flake check || exit 1
+              echo "Running semver checks..."
+              nix run .#check-semver || exit 1
+              EOF
               chmod +x "$PWD/.git/hooks/pre-push"
             '';
           };
