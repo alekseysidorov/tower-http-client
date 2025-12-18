@@ -189,11 +189,11 @@
             name = "install-git-hooks";
             text = ''
               echo "-> Installing pre-commit hook"
-              echo "nix fmt -- --fail-on-change" >> "$PWD/.git/hooks/pre-commit"
+              echo "nix build .#check-fmt"|| exit 1 > "$PWD/.git/hooks/pre-commit"
               chmod +x "$PWD/.git/hooks/pre-commit"
 
               echo "-> Installing pre-push hook"
-              cat >> "$PWD/.git/hooks/pre-push" << 'EOF'
+              cat > "$PWD/.git/hooks/pre-push" << 'EOF'
               #!/bin/sh
               echo "Running flake checks..."
               nix flake check || exit 1
