@@ -1,9 +1,12 @@
 name: "Tests"
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
-  lints:
+  semver-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -13,14 +16,8 @@ jobs:
           name: alekseysidorov-ci
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
-      - name: "Check formatting"
-        run: nix flake check
-
-      - name: "Run linters"
-        run: nix run .#ci-lints
-
-      - name: "Run semver checks"
-        run: nix run .#ci-semver-checks
+      - name: "Run semver compatibility checks"
+        run: nix run .#check-semver
 
   tests:
     strategy:
@@ -36,5 +33,5 @@ jobs:
           name: alekseysidorov-ci
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
-      - name: "Run cargo tests"
-        run: nix run .#ci-tests
+      - name: "Run tests"
+        run: nix flake check

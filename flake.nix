@@ -1,7 +1,27 @@
+# Nix flake for tower-http-client development and CI
+#
+# Usage:
+#   nix flake check              - Run all checks (formatting, clippy, tests, docs)
+#   nix fmt                      - Format code
+#
+#   nix build .#check-clippy     - Run only clippy
+#   nix build .#check-tests      - Run only tests (no default features)
+#   nix build .#check-tests-all  - Run tests with all features
+#   nix build .#check-doc        - Check documentation builds
+#   nix build .#check-doc-tests  - Run doc tests
+#   nix build .#check-fmt        - Check formatting
+#
+#   nix run .#benchmarks         - Run benchmarks
+#   nix run .#check-semver       - Run semver compatibility checks (requires network)
+#   nix run .#git-install-hooks  - Install git hooks (pre-commit: fmt, pre-push: checks + semver)
+#
+#   nix develop                  - Enter development shell with stable Rust
+#   nix develop .#nightly        - Enter development shell with nightly Rust
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
     fenix.url = "github:nix-community/fenix/monthly";
+    crane.url = "github:ipetkov/crane";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     flake-utils.url = "github:numtide/flake-utils";
   };
@@ -12,6 +32,7 @@
       nixpkgs,
       flake-utils,
       fenix,
+      crane,
       treefmt-nix,
     }:
     flake-utils.lib.eachDefaultSystem (
@@ -22,6 +43,7 @@
 
         # Fenix Rust toolchains
         fenixPackage = fenix.packages.${system};
+
         # Minimum supported Rust version
         msrv = {
           name = "1.89.0";
@@ -33,6 +55,9 @@
           msrv = (fenixPackage.fromToolchainName msrv).defaultToolchain;
           nightly = fenixPackage.complete.withComponents [ "rustfmt" ];
         };
+
+        # Crane library for building Rust packages
+        craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchains.msrv;
 
         # Eval the treefmt configuration
         treefmtConfig = {
@@ -51,56 +76,102 @@
         };
         treefmt = (treefmt-nix.lib.evalModule pkgs treefmtConfig).config.build;
 
-        # Runtime inputs for all CI scripts
-        runtimeInputs = with pkgs; [
+        # Common build inputs for all CI scripts
+        buildInputs = with pkgs; [
           cargo-nextest
           openssl
           pkg-config
         ];
 
-        # CI scripts
-        ci = {
-          tests = pkgs.writeShellApplication {
-            name = "ci-run-tests";
-            runtimeInputs = [ rustToolchains.msrv ] ++ runtimeInputs;
-            text = ''
-              cargo nextest run --workspace --all-targets --no-default-features
-              cargo nextest run --workspace --all-targets --all-features
+        # Source filtering for crane
+        src = craneLib.path ./.;
 
-              cargo test --workspace --doc --no-default-features
-              cargo test --workspace --doc --all-features
-
-              cargo run --example rate_limiter
-              cargo run --example retry
-            '';
+        # Common arguments for all crane builds
+        commonArgs = {
+          inherit src;
+          pname = "tower-http-client-workspace";
+          version = "0.5.4";
+          strictDeps = true;
+          nativeBuildInputs = buildInputs;
+          cargoVendorDir = craneLib.vendorCargoDeps {
+            inherit src;
           };
+        };
 
-          lints = pkgs.writeShellApplication {
-            name = "ci-run-lints";
-            runtimeInputs = [
+        # Build dependencies only (for caching)
+        cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+
+        # Helper function to create a check with common args
+        # Usage: mkCheck "nextest" "--workspace --all-targets --all-features"
+        mkCheck =
+          checkType: args:
+          let
+            checks = {
+              nextest = {
+                builder = craneLib.cargoNextest;
+                argsAttr = "cargoNextestExtraArgs";
+              };
+              clippy = {
+                builder = craneLib.cargoClippy;
+                argsAttr = "cargoClippyExtraArgs";
+              };
+              test = {
+                builder = craneLib.cargoTest;
+                argsAttr = "cargoTestExtraArgs";
+              };
+              doc = {
+                builder = craneLib.cargoDoc;
+                argsAttr = "cargoDocExtraArgs";
+              };
+            };
+            checkConfig = checks.${checkType};
+          in
+          checkConfig.builder (
+            commonArgs // { inherit cargoArtifacts; } // { ${checkConfig.argsAttr} = args; }
+          );
+
+        # Define checks that can be reused in packages
+        checks = {
+          formatting = treefmt.check self;
+
+          tests = mkCheck "nextest" "--workspace --all-targets --no-default-features";
+          tests-all-features = mkCheck "nextest" "--workspace --all-targets --all-features";
+          clippy = mkCheck "clippy" "--workspace --all --all-targets --all-features -- --deny warnings";
+          doc-tests = mkCheck "test" "--workspace --doc --all-features";
+          doc = mkCheck "doc" "--workspace --no-deps --all-features";
+        };
+      in
+      {
+        # for `nix fmt`
+        formatter = treefmt.wrapper;
+        # for `nix flake check`
+        inherit checks;
+
+        devShells = {
+          default = pkgs.mkShell {
+            nativeBuildInputs = buildInputs ++ [
               rustToolchains.stable
-              pkgs.typos
-            ]
-            ++ runtimeInputs;
-            text = ''
-              typos
-              cargo clippy --workspace --all --no-default-features
-              cargo clippy --workspace --all --all-targets --all-features
-              cargo doc --workspace --no-deps --no-default-features
-              cargo doc --workspace --no-deps --all-features
-            '';
+              treefmt.wrapper
+            ];
+            # Nightly compiler to run miri tests
+            nightly = pkgs.mkShell {
+              nativeBuildInputs = [ rustToolchains.nightly ];
+            };
           };
+        };
 
+        packages = {
+          # Benchmarks package for local performance testing
           benchmarks = pkgs.writeShellApplication {
-            name = "ci-run-benchmarks";
-            runtimeInputs = [ rustToolchains.stable ] ++ runtimeInputs;
+            name = "run-benchmarks";
+            runtimeInputs = [ rustToolchains.stable ] ++ buildInputs;
             text = ''
               cargo bench --workspace --all-features
             '';
           };
-
-          semver_checks = pkgs.writeShellApplication {
-            name = "ci-run-semver-checks";
+          # Semver compatibility checks (requires network access to crates.io)
+          check-semver = pkgs.writeShellApplication {
+            name = "run-semver-checks";
             runtimeInputs =
               let
                 # FIXME: Remove this override once https://github.com/NixOS/nixpkgs/issues/413204 is fixed.
@@ -113,61 +184,34 @@
                 rustToolchains.msrv
                 cargo-semver-checks
               ]
-              ++ runtimeInputs;
+              ++ buildInputs;
             text = ''cargo semver-checks'';
           };
 
-          # Run them all together
-          all = pkgs.writeShellApplication {
-            name = "ci-run-all";
-            runtimeInputs = [
-              ci.lints
-              ci.tests
-              ci.semver_checks
-            ];
-            text = ''
-              ci-run-lints
-              ci-run-tests
-              ci-run-semver-checks
-            '';
-          };
-        };
-      in
-      {
-        # for `nix fmt`
-        formatter = treefmt.wrapper;
-        # for `nix flake check`
-        checks.formatting = treefmt.check self;
+          # Convenience wrappers to run specific checks
+          check-clippy = checks.clippy;
+          check-tests = checks.tests;
+          check-tests-all = checks.tests-all-features;
+          check-doc = checks.doc;
+          check-doc-tests = checks.doc-tests;
+          check-fmt = checks.formatting;
 
-        devShells.default = pkgs.mkShell {
-          nativeBuildInputs = runtimeInputs ++ [
-            rustToolchains.stable
-            treefmt.wrapper
-            ci.all
-          ];
-        };
-
-        # Nightly compiler to run miri tests
-        devShells.nightly = pkgs.mkShell {
-          nativeBuildInputs = [ rustToolchains.nightly ];
-        };
-
-        packages = {
-          ci-all = ci.all;
-          ci-lints = ci.lints;
-          ci-tests = ci.tests;
-          ci-semver-checks = ci.semver_checks;
-          ci-benchmarks = ci.benchmarks;
-
+          # Convenience script to install git hooks
           git-install-hooks = pkgs.writeShellApplication {
             name = "install-git-hooks";
             text = ''
               echo "-> Installing pre-commit hook"
-              echo "nix flake check" >> "$PWD/.git/hooks/pre-commit"
+              echo "nix build .#check-fmt"|| exit 1 > "$PWD/.git/hooks/pre-commit"
               chmod +x "$PWD/.git/hooks/pre-commit"
 
               echo "-> Installing pre-push hook"
-              echo "nix run \".#ci-all\"" >> "$PWD/.git/hooks/pre-push"
+              cat > "$PWD/.git/hooks/pre-push" << 'EOF'
+              #!/bin/sh
+              echo "Running flake checks..."
+              nix flake check || exit 1
+              echo "Running semver checks..."
+              nix run .#check-semver || exit 1
+              EOF
               chmod +x "$PWD/.git/hooks/pre-push"
             '';
           };
