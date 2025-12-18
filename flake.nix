@@ -89,81 +89,6 @@
             inherit cargoArtifacts;
           }
         );
-
-        # CI scripts
-        ci = {
-          tests = pkgs.writeShellApplication {
-            name = "ci-run-tests";
-            runtimeInputs = [ rustToolchains.msrv ] ++ runtimeInputs;
-            text = ''
-              cargo nextest run --workspace --all-targets --no-default-features
-              cargo nextest run --workspace --all-targets --all-features
-
-              cargo test --workspace --doc --no-default-features
-              cargo test --workspace --doc --all-features
-
-              cargo run --example rate_limiter
-              cargo run --example retry
-            '';
-          };
-
-          lints = pkgs.writeShellApplication {
-            name = "ci-run-lints";
-            runtimeInputs = [
-              rustToolchains.stable
-              pkgs.typos
-            ]
-            ++ runtimeInputs;
-            text = ''
-              typos
-              cargo clippy --workspace --all --no-default-features
-              cargo clippy --workspace --all --all-targets --all-features
-              cargo doc --workspace --no-deps --no-default-features
-              cargo doc --workspace --no-deps --all-features
-            '';
-          };
-
-          benchmarks = pkgs.writeShellApplication {
-            name = "ci-run-benchmarks";
-            runtimeInputs = [ rustToolchains.stable ] ++ runtimeInputs;
-            text = ''
-              cargo bench --workspace --all-features
-            '';
-          };
-
-          semver_checks = pkgs.writeShellApplication {
-            name = "ci-run-semver-checks";
-            runtimeInputs =
-              let
-                # FIXME: Remove this override once https://github.com/NixOS/nixpkgs/issues/413204 is fixed.
-                cargo-semver-checks = pkgs.cargo-semver-checks.overrideAttrs (old: {
-                  doCheck = false;
-                  checkPhase = "true";
-                });
-              in
-              [
-                rustToolchains.msrv
-                cargo-semver-checks
-              ]
-              ++ runtimeInputs;
-            text = ''cargo semver-checks'';
-          };
-
-          # Run them all together
-          all = pkgs.writeShellApplication {
-            name = "ci-run-all";
-            runtimeInputs = [
-              ci.lints
-              ci.tests
-              ci.semver_checks
-            ];
-            text = ''
-              ci-run-lints
-              ci-run-tests
-              ci-run-semver-checks
-            '';
-          };
-        };
       in
       {
         # for `nix fmt`
@@ -224,7 +149,6 @@
           nativeBuildInputs = runtimeInputs ++ [
             rustToolchains.stable
             treefmt.wrapper
-            ci.all
           ];
         };
 
@@ -234,11 +158,14 @@
         };
 
         packages = {
-          ci-all = ci.all;
-          ci-lints = ci.lints;
-          ci-tests = ci.tests;
-          ci-semver-checks = ci.semver_checks;
-          ci-benchmarks = ci.benchmarks;
+          # Benchmarks package for local performance testing
+          benchmarks = pkgs.writeShellApplication {
+            name = "run-benchmarks";
+            runtimeInputs = [ rustToolchains.stable ] ++ runtimeInputs;
+            text = ''
+              cargo bench --workspace --all-features
+            '';
+          };
 
           git-install-hooks = pkgs.writeShellApplication {
             name = "install-git-hooks";
@@ -248,7 +175,7 @@
               chmod +x "$PWD/.git/hooks/pre-commit"
 
               echo "-> Installing pre-push hook"
-              echo "nix run \".#ci-all\"" >> "$PWD/.git/hooks/pre-push"
+              echo "nix flake check" >> "$PWD/.git/hooks/pre-push"
               chmod +x "$PWD/.git/hooks/pre-push"
             '';
           };
