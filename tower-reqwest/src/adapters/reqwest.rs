@@ -162,9 +162,8 @@ mod tests {
         let service = ServiceBuilder::new()
             .override_response_header(USER_AGENT, HeaderValue::from_static("tower-reqwest"))
             .set_x_request_id(MakeRequestUuid)
-            .map_err(|err: FailableServiceError<_>| anyhow::Error::from(err))
+            .map_err(|err: FailableServiceError<reqwest::Error>| anyhow::Error::from(err))
             .layer(FailableServiceLayer)
-            .map_err(|err: reqwest::Error| anyhow::Error::from(err))
             .layer(HttpClientLayer)
             .service(client)
             .boxed_clone();
