@@ -12,6 +12,16 @@ and this project adheres to
   double pinning, simplifying the internal structure.
 - Bump minimum supported Rust version to `1.89.0`.
 
+## [0.6.0] - 2026.02.12
+
+- **breaking**: * Removed `tower-request`’s public `Error` type and `Result`
+  alias, and deleted the internal `error` module.
+- **breaking**: * Updated the request adapter (`HttpClientService` /
+  `ExecuteRequestFuture`) to propagate `S::Error` directly (now constrained to
+  `request::Error`) instead of wrapping it in a crate-specific error type.
+- **breaking**: * Removed `error` re-exports from `tower-http-client` request
+  adapter to align with the updated `tower-request` API.
+
 ## [0.5.3] - 2025.09.23
 
 - Improved `Debug` implementations for `ClientRequest` and

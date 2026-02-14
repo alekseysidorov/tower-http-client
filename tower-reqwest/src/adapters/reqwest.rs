@@ -11,14 +11,11 @@ use crate::HttpClientService;
 
 impl<S> Service<http::Request<reqwest::Body>> for HttpClientService<S>
 where
-    S: Service<reqwest::Request>,
-    S::Future: Send + 'static,
-    S::Error: 'static,
+    S: Service<reqwest::Request, Error = reqwest::Error>,
     http::Response<reqwest::Body>: From<S::Response>,
-    crate::Error: From<S::Error>,
 {
     type Response = http::Response<reqwest::Body>;
-    type Error = crate::Error;
+    type Error = S::Error;
     type Future = ExecuteRequestFuture<S>;
 
     fn poll_ready(
@@ -46,7 +43,7 @@ where
         fut: S::Future,
     },
     Error {
-        error: Option<crate::Error>,
+        error: Option<S::Error>,
     },
 }
 
@@ -54,12 +51,10 @@ impl<S> ExecuteRequestFuture<S>
 where
     S: Service<reqwest::Request>,
 {
-    fn new(future: Result<S::Future, reqwest::Error>) -> Self {
+    fn new(future: Result<S::Future, S::Error>) -> Self {
         match future {
             Ok(fut) => Self::Future { fut },
-            Err(error) => Self::Error {
-                error: Some(error.into()),
-            },
+            Err(error) => Self::Error { error: Some(error) },
         }
     }
 }
@@ -68,18 +63,15 @@ impl<S> Future for ExecuteRequestFuture<S>
 where
     S: Service<reqwest::Request>,
     http::Response<reqwest::Body>: From<S::Response>,
-    crate::Error: From<S::Error>,
 {
-    type Output = crate::Result<http::Response<reqwest::Body>>;
+    type Output = Result<http::Response<reqwest::Body>, S::Error>;
 
     fn poll(
         self: std::pin::Pin<&mut Self>,
         cx: &mut std::task::Context<'_>,
     ) -> std::task::Poll<Self::Output> {
         match self.project() {
-            ExecuteRequestFutureProj::Future { fut } => {
-                fut.poll(cx).map_ok(From::from).map_err(crate::Error::from)
-            }
+            ExecuteRequestFutureProj::Future { fut } => fut.poll(cx).map_ok(From::from),
             ExecuteRequestFutureProj::Error { error } => {
                 let error = error.take().expect("Polled after ready");
                 Poll::Ready(Err(error))
@@ -90,12 +82,13 @@ where
 
 #[cfg(test)]
 mod tests {
+    use futures_util::{FutureExt, TryFutureExt as _, future::BoxFuture};
     use http::{HeaderName, HeaderValue, header::USER_AGENT};
     use http_body_util::BodyExt;
     use pretty_assertions::assert_eq;
     use reqwest::Client;
     use serde::{Deserialize, Serialize};
-    use tower::{Service, ServiceBuilder, ServiceExt};
+    use tower::{Layer, Service, ServiceBuilder, ServiceExt};
     use tower_http::{ServiceBuilderExt, request_id::MakeRequestUuid};
     use wiremock::{
         Mock, MockServer, ResponseTemplate,
@@ -169,6 +162,8 @@ mod tests {
         let service = ServiceBuilder::new()
             .override_response_header(USER_AGENT, HeaderValue::from_static("tower-reqwest"))
             .set_x_request_id(MakeRequestUuid)
+            .map_err(|err: FailableServiceError<reqwest::Error>| anyhow::Error::from(err))
+            .layer(FailableServiceLayer)
             .layer(HttpClientLayer)
             .service(client)
             .boxed_clone();
@@ -178,7 +173,11 @@ mod tests {
             .uri(format!("{mock_uri}/hello"))
             // TODO Make in easy to create requests without body.
             .body(reqwest::Body::default())?;
-        let response = service.clone().call(request).await?;
+        let response = service
+            .clone()
+            .call(request)
+            .await
+            .inspect_err(|_: &anyhow::Error| {})?;
 
         assert!(response.status().is_success());
         assert_eq!(
@@ -193,5 +192,56 @@ mod tests {
         assert!(info.request_id.is_some());
 
         Ok(())
+    }
+
+    #[derive(Debug, Clone)]
+    struct FailableServiceLayer;
+
+    impl<S> Layer<S> for FailableServiceLayer {
+        type Service = FailableService<S>;
+
+        fn layer(&self, inner: S) -> Self::Service {
+            FailableService { inner }
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    struct FailableService<S> {
+        inner: S,
+    }
+
+    impl<S, B> Service<http::Request<B>> for FailableService<S>
+    where
+        S: Service<http::Request<B>>,
+        S::Future: Send + 'static,
+        S::Error: 'static,
+    {
+        type Response = S::Response;
+        type Error = FailableServiceError<S::Error>;
+        type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+
+        fn poll_ready(
+            &mut self,
+            cx: &mut std::task::Context<'_>,
+        ) -> std::task::Poll<Result<(), Self::Error>> {
+            self.inner
+                .poll_ready(cx)
+                .map_err(FailableServiceError::Inner)
+        }
+
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
+            self.inner
+                .call(req)
+                .map_err(FailableServiceError::Inner)
+                .boxed()
+        }
+    }
+
+    #[derive(Debug, Clone, thiserror::Error)]
+    #[error("i'm failed")]
+    #[allow(unused)]
+    enum FailableServiceError<E> {
+        Inner(E),
+        Other,
     }
 }
