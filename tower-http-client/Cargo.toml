@@ -15,6 +15,52 @@ categories.workspace = true
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
+[dependencies]
+bytes = { workspace = true }
+futures-util = { workspace = true }
+http = { workspace = true }
+http-body = { workspace = true }
+http-body-reader = { workspace = true }
+http-body-util = { workspace = true }
+include-utils = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tower = { workspace = true, default-features = false, features = ["util"] }
+tower-layer = { workspace = true }
+tower-service = { workspace = true }
+url = { workspace = true }
+
+headers = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+serde_urlencoded = { workspace = true, optional = true }
+
+[dev-dependencies]
+anyhow = { workspace = true }
+async-trait = { workspace = true }
+axum = { workspace = true }
+criterion = { workspace = true, features = ["async_tokio"] }
+reqwest = { workspace = true, features = ["json"] }
+reqwest-middleware = { workspace = true }
+retry-policies = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true, features = ["buffer", "limit", "retry", "util"] }
+tower-http = { workspace = true, features = [
+  "map-request-body",
+  "map-response-body",
+  "set-header",
+  "util",
+] }
+tower-reqwest = { workspace = true }
+wiremock = { workspace = true }
+
+[features]
+default = ["form", "json", "typed-header"]
+form = ["dep:serde_urlencoded", "http-body-reader/form"]
+json = ["dep:serde_json", "http-body-reader/json"]
+typed-header = ["dep:headers"]
+
 [[example]]
 name = "rate_limiter"
 required-features = ["reqwest"]
@@ -43,53 +89,6 @@ required-features = ["reqwest"]
 harness = false
 name = "client"
 required-features = ["json", "reqwest"]
-
-[dependencies]
-bytes = { workspace = true }
-futures-util = { workspace = true }
-headers = { workspace = true, optional = true }
-http = { workspace = true }
-http-body = { workspace = true }
-http-body-reader = { workspace = true }
-http-body-util = { workspace = true }
-include-utils = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true, optional = true }
-serde_urlencoded = { workspace = true, optional = true }
-thiserror = { workspace = true }
-tower = { workspace = true, default-features = false, features = ["util"] }
-tower-layer = { workspace = true }
-tower-reqwest = { workspace = true, optional = true }
-tower-service = { workspace = true }
-url = { workspace = true }
-
-[dev-dependencies]
-anyhow = { workspace = true }
-async-trait = { workspace = true }
-axum = { workspace = true }
-criterion = { workspace = true, features = ["async_tokio"] }
-reqwest = { workspace = true, features = ["json"] }
-reqwest-middleware = { workspace = true }
-retry-policies = { workspace = true }
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
-tokio = { workspace = true }
-tower = { workspace = true, features = ["buffer", "limit", "retry", "util"] }
-tower-http = { workspace = true, features = [
-  "map-request-body",
-  "map-response-body",
-  "set-header",
-  "util",
-] }
-tower-reqwest = { workspace = true }
-wiremock = { workspace = true }
-
-[features]
-default = ["form", "json", "reqwest", "typed-header"]
-form = ["dep:serde_urlencoded", "http-body-reader/form"]
-json = ["dep:serde_json", "http-body-reader/json"]
-reqwest = ["dep:tower-reqwest"]
-typed-header = ["dep:headers"]
 
 [lints]
 workspace = true

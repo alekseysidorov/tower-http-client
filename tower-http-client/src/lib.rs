@@ -13,6 +13,4 @@
 
 pub use client::{RequestBuilderExt, ResponseExt, ServiceExt};
 
-#[cfg(feature = "reqwest")]
-pub mod adapters;
 pub mod client;
