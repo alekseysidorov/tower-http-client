@@ -130,6 +130,29 @@
             commonArgs // { inherit cargoArtifacts; } // { ${checkConfig.argsAttr} = args; }
           );
 
+        # Automatically generate convenience wrappers for all checks
+        mkCheckPackages =
+          checks:
+          pkgs.lib.mapAttrs' (name: value: {
+            name = "check-" + name;
+            value = value;
+          }) checks;
+
+        mkGitHooks =
+          hooks:
+          pkgs.writeShellApplication {
+            name = "install-git-hooks";
+            text = pkgs.lib.concatMapStrings (hookName: ''
+              echo "⚡️ Installing ${hookName} hook"
+              cat > "$PWD/.git/hooks/${hookName}" << 'EOF'
+              ${pkgs.runtimeShell}
+              set -euo pipefail
+              ${hooks.${hookName}}
+              EOF
+              chmod +x "$PWD/.git/hooks/${hookName}"
+            '') (pkgs.lib.attrNames hooks);
+          };
+
         # Define checks that can be reused in packages
         checks = {
           formatting = treefmt.check self;
@@ -189,34 +212,22 @@
             text = "cargo semver-checks";
           };
 
-          # Convenience wrappers to run specific checks
-          check-clippy = checks.clippy;
-          check-tests = checks.tests;
-          check-tests-all = checks.tests-all-features;
-          check-doc = checks.doc;
-          check-doc-tests = checks.doc-tests;
-          check-fmt = checks.formatting;
-
           # Convenience script to install git hooks
-          git-install-hooks = pkgs.writeShellApplication {
-            name = "install-git-hooks";
-            text = ''
-              echo "-> Installing pre-commit hook"
-              echo "nix build .#check-fmt"|| exit 1 > "$PWD/.git/hooks/pre-commit"
-              chmod +x "$PWD/.git/hooks/pre-commit"
-
-              echo "-> Installing pre-push hook"
-              cat > "$PWD/.git/hooks/pre-push" << 'EOF'
-              #!/bin/sh
-              echo "Running flake checks..."
-              nix flake check || exit 1
-              echo "Running semver checks..."
-              nix run .#check-semver || exit 1
-              EOF
-              chmod +x "$PWD/.git/hooks/pre-push"
+          git-install-hooks = mkGitHooks {
+            "pre-commit" = ''
+              echo "⚡️ Running pre-commit checks..."
+              nix build .#check-formatting
+            '';
+            "pre-push" = ''
+              echo "⚡️ Running flake checks..."
+              nix flake check
+               echo "⚡️ Running semver checks..."
+              nix run .#check-semver
             '';
           };
-        };
+        }
+        # Convenience wrappers to run specific checks
+        // mkCheckPackages checks;
       }
     );
 }

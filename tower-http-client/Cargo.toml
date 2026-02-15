@@ -15,53 +15,24 @@ categories.workspace = true
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[[example]]
-name = "rate_limiter"
-required-features = ["reqwest"]
-
-[[example]]
-name = "retry"
-required-features = ["reqwest"]
-
-[[example]]
-name = "send_json"
-required-features = ["json", "reqwest"]
-
-[[example]]
-name = "send_form"
-required-features = ["form", "reqwest"]
-
-[[example]]
-name = "boxed_client"
-required-features = ["json", "reqwest"]
-
-[[test]]
-name = "service_ext"
-required-features = ["reqwest"]
-
-[[bench]]
-harness = false
-name = "client"
-required-features = ["json", "reqwest"]
-
 [dependencies]
 bytes = { workspace = true }
 futures-util = { workspace = true }
-headers = { workspace = true, optional = true }
 http = { workspace = true }
 http-body = { workspace = true }
 http-body-reader = { workspace = true }
 http-body-util = { workspace = true }
 include-utils = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true, optional = true }
-serde_urlencoded = { workspace = true, optional = true }
 thiserror = { workspace = true }
 tower = { workspace = true, default-features = false, features = ["util"] }
 tower-layer = { workspace = true }
-tower-reqwest = { workspace = true, optional = true }
 tower-service = { workspace = true }
 url = { workspace = true }
+
+headers = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+serde_urlencoded = { workspace = true, optional = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }
@@ -85,11 +56,27 @@ tower-reqwest = { workspace = true }
 wiremock = { workspace = true }
 
 [features]
-default = ["form", "json", "reqwest", "typed-header"]
+default = ["form", "json", "typed-header"]
 form = ["dep:serde_urlencoded", "http-body-reader/form"]
 json = ["dep:serde_json", "http-body-reader/json"]
-reqwest = ["dep:tower-reqwest"]
 typed-header = ["dep:headers"]
+
+[[example]]
+name = "send_json"
+required-features = ["json"]
+
+[[example]]
+name = "send_form"
+required-features = ["form"]
+
+[[example]]
+name = "boxed_client"
+required-features = ["json"]
+
+[[bench]]
+harness = false
+name = "client"
+required-features = ["json"]
 
 [lints]
 workspace = true
