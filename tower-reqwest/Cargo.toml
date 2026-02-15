@@ -1,21 +1,27 @@
 [package]
+name = "tower-reqwest"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 description = "Adapter between reqwest and tower-http crates."
 documentation = "https://docs.rs/crate/tower-reqwest"
-name = "tower-reqwest"
 readme = "README.md"
-
-version.workspace = true
-categories.workspace = true
-edition.workspace = true
-keywords.workspace = true
-license.workspace = true
 repository.workspace = true
-rust-version.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
-[features]
-default = []
-auth = ["dep:base64"]
-set-header = []
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[[example]]
+name = "set_header"
+required-features = ["set-header"]
+
+[[example]]
+name = "add_authorization"
+required-features = ["auth"]
 
 [dependencies]
 base64 = { workspace = true, optional = true }
@@ -38,20 +44,13 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
 tower = { workspace = true }
-tower-http = { workspace = true, features = ["set-header", "util", "request-id"] }
+tower-http = { workspace = true, features = ["request-id", "set-header", "util"] }
 wiremock = { workspace = true }
 
-[[example]]
-name = "set_header"
-required-features = ["set-header"]
-
-[[example]]
-name = "add_authorization"
-required-features = ["auth"]
+[features]
+default = []
+auth = ["dep:base64"]
+set-header = []
 
 [lints]
 workspace = true
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
