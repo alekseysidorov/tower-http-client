@@ -90,7 +90,7 @@
         commonArgs = {
           inherit src;
           pname = "tower-http-client-workspace";
-          version = "0.5.4";
+          version = "0.6.0";
           strictDeps = true;
           nativeBuildInputs = buildInputs;
           cargoVendorDir = craneLib.vendorCargoDeps {
@@ -169,6 +169,7 @@
               cargo bench --workspace --all-features
             '';
           };
+
           # Semver compatibility checks (requires network access to crates.io)
           check-semver = pkgs.writeShellApplication {
             name = "run-semver-checks";
@@ -185,7 +186,7 @@
                 cargo-semver-checks
               ]
               ++ buildInputs;
-            text = ''cargo semver-checks'';
+            text = "cargo semver-checks";
           };
 
           # Convenience wrappers to run specific checks
