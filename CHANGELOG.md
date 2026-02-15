@@ -12,7 +12,7 @@ and this project adheres to
   eliminate dependency on specific versions of `reqwest`. The crate is now fully
   generic and does not tie to any HTTP client implementation. Users needing
   `reqwest`-specific features should use **`tower-reqwest`** directly.
-- **breaking**: * Updated the request adapter (`HttpClientService` /
+- **breaking:** Updated the request adapter (`HttpClientService` /
   `ExecuteRequestFuture`) to propagate `S::Error` directly (now constrained to
   `request::Error`) instead of wrapping it in a crate-specific error type.
 - Refactored `ExecuteRequestFuture` in `tower-reqwest` to remove unnecessary
