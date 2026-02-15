@@ -201,16 +201,16 @@
           git-install-hooks = pkgs.writeShellApplication {
             name = "install-git-hooks";
             text = ''
-              echo "-> Installing pre-commit hook"
-              echo "nix build .#check-fmt"|| exit 1 > "$PWD/.git/hooks/pre-commit"
+              echo "⚡️ Installing pre-commit hook"
+              echo "nix build .#check-fmt || exit 1" > "$PWD/.git/hooks/pre-commit"
               chmod +x "$PWD/.git/hooks/pre-commit"
 
-              echo "-> Installing pre-push hook"
+              echo "⚡️ Installing pre-push hook"
               cat > "$PWD/.git/hooks/pre-push" << 'EOF'
               #!/bin/sh
-              echo "Running flake checks..."
+              echo "⚡️ Running flake checks..."
               nix flake check || exit 1
-              echo "Running semver checks..."
+              echo "⚡️ Running semver checks..."
               nix run .#check-semver || exit 1
               EOF
               chmod +x "$PWD/.git/hooks/pre-push"
