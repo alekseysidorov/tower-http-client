@@ -62,12 +62,6 @@ json = ["dep:serde_json", "http-body-reader/json"]
 typed-header = ["dep:headers"]
 
 [[example]]
-name = "rate_limiter"
-
-[[example]]
-name = "retry"
-
-[[example]]
 name = "send_json"
 required-features = ["json"]
 
@@ -78,9 +72,6 @@ required-features = ["form"]
 [[example]]
 name = "boxed_client"
 required-features = ["json"]
-
-[[test]]
-name = "service_ext"
 
 [[bench]]
 harness = false
