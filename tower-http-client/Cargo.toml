@@ -63,32 +63,29 @@ typed-header = ["dep:headers"]
 
 [[example]]
 name = "rate_limiter"
-required-features = ["reqwest"]
 
 [[example]]
 name = "retry"
-required-features = ["reqwest"]
 
 [[example]]
 name = "send_json"
-required-features = ["json", "reqwest"]
+required-features = ["json"]
 
 [[example]]
 name = "send_form"
-required-features = ["form", "reqwest"]
+required-features = ["form"]
 
 [[example]]
 name = "boxed_client"
-required-features = ["json", "reqwest"]
+required-features = ["json"]
 
 [[test]]
 name = "service_ext"
-required-features = ["reqwest"]
 
 [[bench]]
 harness = false
 name = "client"
-required-features = ["json", "reqwest"]
+required-features = ["json"]
 
 [lints]
 workspace = true
