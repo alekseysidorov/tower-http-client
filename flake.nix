@@ -221,7 +221,7 @@
             "pre-push" = ''
               echo "⚡️ Running flake checks..."
               nix flake check -L
-               echo "⚡️ Running semver checks..."
+              echo "⚡️ Running semver checks..."
               nix run .#check-semver -L
             '';
           };
