@@ -8,7 +8,7 @@ use tokio::time::Instant;
 use tower::{BoxError, ServiceBuilder, util::BoxCloneSyncService};
 use tower_http::ServiceBuilderExt;
 use tower_http_client::{ResponseExt as _, ServiceExt as _};
-use tower_reqwest::{HttpClientLayer, into_reqwest_body};
+use tower_reqwest::HttpClientLayer;
 
 /// A body that can be cloned in order to be sent multiple times.
 type CloneableBody = http_body_util::Full<Bytes>;
@@ -298,7 +298,7 @@ fn benchmark_json(criterion: &mut Criterion) {
                 .layer_fn(BoxCloneSyncService::new)
                 .map_err(BoxError::from)
                 .map_response_body(|body: reqwest::Body| body.map_err(BoxError::from).boxed())
-                .map_request_body(|body: CloneableBody| into_reqwest_body(body))
+                .map_request_body(|body: CloneableBody| reqwest::Body::wrap(body))
                 .layer(HttpClientLayer)
                 .service(reqwest::Client::new())
         },

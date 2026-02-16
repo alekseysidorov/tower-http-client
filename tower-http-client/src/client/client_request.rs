@@ -2,13 +2,11 @@
 
 use std::{any::Any, future::Future, marker::PhantomData};
 
+use bytes::Bytes;
 use http::{Extensions, HeaderMap, HeaderName, HeaderValue, Method, Uri, Version};
 use tower_service::Service;
 
 use super::{IntoUri, ServiceExt as _};
-
-type EmptyBody = http_body_util::Empty<()>;
-const EMPTY_BODY: EmptyBody = EmptyBody::new();
 
 /// An [`http::Request`] builder.
 ///
@@ -124,12 +122,12 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     ///
     /// If erroneous data was passed during the query building process.
     #[allow(clippy::missing_panics_doc)]
-    pub fn without_body(self) -> ClientRequest<'a, S, Err, EmptyBody, RespBody> {
+    pub fn without_body(self) -> ClientRequest<'a, S, Err, Bytes, RespBody> {
         ClientRequest {
             service: self.service,
             request: self
                 .builder
-                .body(EMPTY_BODY)
+                .body(Bytes::default())
                 .expect("failed to build request without a body"),
             _phantom: PhantomData,
         }
