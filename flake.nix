@@ -216,13 +216,13 @@
           git-install-hooks = mkGitHooks {
             "pre-commit" = ''
               echo "⚡️ Running pre-commit checks..."
-              nix build .#check-formatting
+              nix build .#check-formatting -L
             '';
             "pre-push" = ''
               echo "⚡️ Running flake checks..."
-              nix flake check
+              nix flake check -L
                echo "⚡️ Running semver checks..."
-              nix run .#check-semver
+              nix run .#check-semver -L
             '';
           };
         }
