@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+- **breaking:** Renamed `build` method to `without_body` in `ClientRequest` to
+  better reflect its purpose and improve API clarity.
 - **breaking:** Removed `reqwest` dependency from `tower-http-client` to
   eliminate dependency on specific versions of `reqwest`. The crate is now fully
   generic and does not tie to any HTTP client implementation. Users needing

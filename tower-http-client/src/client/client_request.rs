@@ -7,9 +7,8 @@ use tower_service::Service;
 
 use super::{IntoUri, ServiceExt as _};
 
-type EmptyBody = ();
-
-const EMPTY_BODY: EmptyBody = ();
+type EmptyBody = http_body_util::Empty<()>;
+const EMPTY_BODY: EmptyBody = EmptyBody::new();
 
 /// An [`http::Request`] builder.
 ///
@@ -119,6 +118,23 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
         })
     }
 
+    /// Consumes this builder and returns a constructed request without a body.
+    ///
+    /// # Errors
+    ///
+    /// If erroneous data was passed during the query building process.
+    #[allow(clippy::missing_panics_doc)]
+    pub fn without_body(self) -> ClientRequest<'a, S, Err, EmptyBody, RespBody> {
+        ClientRequest {
+            service: self.service,
+            request: self
+                .builder
+                .body(EMPTY_BODY)
+                .expect("failed to build request without a body"),
+            _phantom: PhantomData,
+        }
+    }
+
     /// Sets a JSON body for this request.
     ///
     /// Additionally this method adds a `CONTENT_TYPE` header for JSON body.
@@ -200,23 +216,6 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
         self.builder = self.builder.typed_header(header);
         self
     }
-
-    /// Consumes this builder and returns a constructed request without a body.
-    ///
-    /// # Errors
-    ///
-    /// If erroneous data was passed during the query building process.
-    #[allow(clippy::missing_panics_doc)]
-    pub fn build(self) -> ClientRequest<'a, S, Err, EmptyBody, RespBody> {
-        ClientRequest {
-            service: self.service,
-            request: self
-                .builder
-                .body(EMPTY_BODY)
-                .expect("failed to build request without a body"),
-            _phantom: PhantomData,
-        }
-    }
 }
 
 impl<S, Err, RespBody> std::fmt::Debug for ClientRequestBuilder<'_, S, Err, RespBody> {
@@ -253,13 +252,6 @@ impl<'a, S, Err, RespBody> ClientRequest<'a, S, Err, (), RespBody> {
     }
 }
 
-/// Workaround for impl trait lifetimes capturing rules:
-/// https://github.com/rust-lang/rust/issues/34511#issuecomment-373423999
-#[doc(hidden)]
-pub trait Captures<U> {}
-
-impl<T: ?Sized, U> Captures<U> for T {}
-
 impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     /// Sends the request to the target URI.
     ///
@@ -268,7 +260,7 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     /// - if the `ReqBody` is not valid body.
     pub fn send<ReqBody>(
         self,
-    ) -> impl Future<Output = Result<http::Response<RespBody>, Err>> + Captures<&'a ()>
+    ) -> impl Future<Output = Result<http::Response<RespBody>, Err>> + use<'a, S, Err, RespBody, ReqBody>
     where
         S: Service<http::Request<ReqBody>, Response = http::Response<RespBody>, Error = Err>,
         S::Future: Send + 'static,
@@ -287,7 +279,8 @@ impl<'a, S, Err, ReqBody, RespBody> ClientRequest<'a, S, Err, ReqBody, RespBody>
     /// Sends the request to the target URI.
     pub fn send<R>(
         self,
-    ) -> impl Future<Output = Result<http::Response<RespBody>, Err>> + Captures<&'a ()>
+    ) -> impl Future<Output = Result<http::Response<RespBody>, Err>>
+    + use<'a, S, Err, ReqBody, RespBody, R>
     where
         S: Service<http::Request<R>, Response = http::Response<RespBody>, Error = Err>,
         S::Future: Send + 'static,
@@ -334,25 +327,33 @@ mod tests {
             .service(Client::new());
 
         assert_eq!(
-            fake_client.get("http://localhost").build().request.method(),
+            fake_client
+                .get("http://localhost")
+                .without_body()
+                .request
+                .method(),
             Method::GET
         );
         assert_eq!(
             fake_client
                 .post("http://localhost")
-                .build()
+                .without_body()
                 .request
                 .method(),
             Method::POST
         );
         assert_eq!(
-            fake_client.put("http://localhost").build().request.method(),
+            fake_client
+                .put("http://localhost")
+                .without_body()
+                .request
+                .method(),
             Method::PUT
         );
         assert_eq!(
             fake_client
                 .patch("http://localhost")
-                .build()
+                .without_body()
                 .request
                 .method(),
             Method::PATCH
@@ -360,7 +361,7 @@ mod tests {
         assert_eq!(
             fake_client
                 .delete("http://localhost")
-                .build()
+                .without_body()
                 .request
                 .method(),
             Method::DELETE
@@ -368,7 +369,7 @@ mod tests {
         assert_eq!(
             fake_client
                 .head("http://localhost")
-                .build()
+                .without_body()
                 .request
                 .method(),
             Method::HEAD
