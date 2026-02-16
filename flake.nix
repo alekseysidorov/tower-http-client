@@ -211,6 +211,16 @@
               ++ buildInputs;
             text = "cargo semver-checks";
           };
+          # Cargo crate publishing compatibility checks
+          check-cargo-publish = pkgs.writeShellApplication {
+            name = "run-cargo-publish-checks";
+            runtimeInputs = [
+              rustToolchains.stable
+            ];
+            text = ''
+              cargo publish --workspace --all-features --dry-run
+            '';
+          };
 
           # Convenience script to install git hooks
           git-install-hooks = mkGitHooks {
@@ -223,6 +233,8 @@
               nix flake check -L
               echo "⚡️ Running semver checks..."
               nix run .#check-semver -L
+              echo "⚡️ Running cargo publish compatibility checks..."
+              nix run .#check-cargo-publish -L
             '';
           };
         }

@@ -1,11 +1,12 @@
 [package]
 name = "tower-reqwest"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
 description = "Adapter between reqwest and tower-http crates."
 documentation = "https://docs.rs/crate/tower-reqwest"
 readme = "README.md"
+
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 repository.workspace = true
 license.workspace = true
 keywords.workspace = true
