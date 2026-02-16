@@ -18,6 +18,8 @@ jobs:
 
       - name: "Run semver compatibility checks"
         run: nix run .#check-semver
+      - name: "Run cargo publish compatibility checks"
+        run: nix run .#check-cargo-publish
 
   tests:
     strategy:
