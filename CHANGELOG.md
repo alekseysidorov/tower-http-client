@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+- **breaking:** Improved integration with `reqwest`: request body conversion now
+  uses `reqwest::Body::wrap` instead of `into_reqwest_body` method.
+  `ClientRequestBuilder` method `without_body` now returns a `Bytes` type in
+  order to improve compatibility with other HTTP clients.
 - **breaking:** Renamed `build` method to `without_body` in `ClientRequest` to
   better reflect its purpose and improve API clarity.
 - **breaking:** Removed `reqwest` dependency from `tower-http-client` to
