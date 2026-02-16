@@ -9,7 +9,7 @@ use retry_policies::{RetryDecision, policies::ExponentialBackoff};
 use tower::{ServiceBuilder, ServiceExt as _};
 use tower_http::ServiceBuilderExt as _;
 use tower_http_client::client::ServiceExt as _;
-use tower_reqwest::{HttpClientLayer, into_reqwest_body};
+use tower_reqwest::HttpClientLayer;
 use wiremock::{
     Mock, MockServer, ResponseTemplate,
     matchers::{method, path},
@@ -133,7 +133,7 @@ async fn main() -> anyhow::Result<()> {
             ExponentialBackoff::builder().build_with_max_retries(10),
         ))
         // Set the request body type.
-        .map_request_body(|body: http_body_util::Full<Bytes>| into_reqwest_body(body))
+        .map_request_body(|body: http_body_util::Full<Bytes>| reqwest::Body::wrap(body))
         .layer(HttpClientLayer)
         .service(reqwest::Client::new())
         .map_err(anyhow::Error::msg)

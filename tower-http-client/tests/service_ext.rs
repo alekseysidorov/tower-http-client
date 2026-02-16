@@ -74,6 +74,33 @@ async fn test_service_ext_get() -> anyhow::Result<()> {
     Ok(())
 }
 
+// Check that the `without_body` method is useful.
+#[tokio::test]
+async fn test_service_ext_without_body() -> anyhow::Result<()> {
+    let (mock_server, mock_uri) = utils::start_mock_server().await;
+
+    Mock::given(method("GET"))
+        .and(path("/hello"))
+        .respond_with(ResponseTemplate::new(200))
+        // Mounting the mock on the mock server - it's now effective!
+        .mount(&mock_server)
+        .await;
+
+    let client = ServiceBuilder::new()
+        .layer(HttpClientLayer)
+        .service(Client::new());
+
+    let response = client
+        .clone()
+        .get(format!("{mock_uri}/hello"))
+        .without_body()
+        .send()
+        .await?;
+    assert!(response.status().is_success());
+
+    Ok(())
+}
+
 #[cfg(feature = "json")]
 #[tokio::test]
 async fn test_service_ext_put_json() -> anyhow::Result<()> {

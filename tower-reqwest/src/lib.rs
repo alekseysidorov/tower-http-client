@@ -4,9 +4,6 @@
 //!
 #![doc = include_utils::include_md!("README.md:description")]
 
-use bytes::Bytes;
-use http_body::Body as HttpBody;
-use http_body_util::BodyDataStream;
 use tower_layer::Layer;
 
 mod adapters;
@@ -41,15 +38,4 @@ impl<S> Layer<S> for HttpClientLayer {
     fn layer(&self, service: S) -> Self::Service {
         HttpClientService(service)
     }
-}
-
-/// Converts an arbitrary body type into the `reqwest::Body` one.
-pub fn into_reqwest_body<B>(body: B) -> reqwest::Body
-where
-    B: HttpBody + Send + Sync + 'static,
-    B::Error: Into<Box<dyn std::error::Error + Send + Sync>>,
-    Bytes: From<B::Data>,
-{
-    let stream = BodyDataStream::new(body);
-    reqwest::Body::wrap_stream(stream)
 }

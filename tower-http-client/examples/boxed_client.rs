@@ -5,7 +5,7 @@ use serde::Deserialize;
 use tower::{BoxError, Service, ServiceBuilder, util::BoxCloneSyncService};
 use tower_http::ServiceBuilderExt;
 use tower_http_client::{ResponseExt as _, ServiceExt};
-use tower_reqwest::{HttpClientLayer, into_reqwest_body};
+use tower_reqwest::HttpClientLayer;
 
 /// A body that can be cloned in order to be sent multiple times.
 type CloneableBody = http_body_util::Full<Bytes>;
@@ -30,7 +30,7 @@ fn into_tower_http_client(
     ServiceBuilder::new()
         .map_err(BoxError::from)
         .map_response_body(|body: reqwest::Body| body.map_err(BoxError::from).boxed())
-        .map_request_body(into_reqwest_body)
+        .map_request_body(reqwest::Body::wrap)
         .layer(HttpClientLayer)
         .service(client)
 }

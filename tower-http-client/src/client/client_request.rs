@@ -2,13 +2,11 @@
 
 use std::{any::Any, future::Future, marker::PhantomData};
 
+use bytes::Bytes;
 use http::{Extensions, HeaderMap, HeaderName, HeaderValue, Method, Uri, Version};
 use tower_service::Service;
 
 use super::{IntoUri, ServiceExt as _};
-
-type EmptyBody = http_body_util::Empty<()>;
-const EMPTY_BODY: EmptyBody = EmptyBody::new();
 
 /// An [`http::Request`] builder.
 ///
@@ -101,6 +99,24 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
         self.builder.extensions_mut()
     }
 
+    /// Appends a typed header to this request.
+    ///
+    /// This function will append the provided header as a header to the
+    /// internal [`HeaderMap`] being constructed.  Essentially this is
+    /// equivalent to calling [`headers::HeaderMapExt::typed_insert`].
+    #[must_use]
+    #[cfg(feature = "typed-header")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "typed_header")))]
+    pub fn typed_header<T>(mut self, header: T) -> Self
+    where
+        T: headers::Header,
+    {
+        use super::RequestBuilderExt as _;
+
+        self.builder = self.builder.typed_header(header);
+        self
+    }
+
     /// "Consumes" this builder, using the provided `body` to return a
     /// constructed [`ClientRequest`].
     ///
@@ -124,12 +140,12 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     ///
     /// If erroneous data was passed during the query building process.
     #[allow(clippy::missing_panics_doc)]
-    pub fn without_body(self) -> ClientRequest<'a, S, Err, EmptyBody, RespBody> {
+    pub fn without_body(self) -> ClientRequest<'a, S, Err, Bytes, RespBody> {
         ClientRequest {
             service: self.service,
             request: self
                 .builder
-                .body(EMPTY_BODY)
+                .body(Bytes::default())
                 .expect("failed to build request without a body"),
             _phantom: PhantomData,
         }
@@ -197,24 +213,6 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
             request: self.builder.form(form)?,
             _phantom: PhantomData,
         })
-    }
-
-    /// Appends a typed header to this request.
-    ///
-    /// This function will append the provided header as a header to the
-    /// internal [`HeaderMap`] being constructed.  Essentially this is
-    /// equivalent to calling [`headers::HeaderMapExt::typed_insert`].
-    #[must_use]
-    #[cfg(feature = "typed-header")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "typed_header")))]
-    pub fn typed_header<T>(mut self, header: T) -> Self
-    where
-        T: headers::Header,
-    {
-        use super::RequestBuilderExt as _;
-
-        self.builder = self.builder.typed_header(header);
-        self
     }
 }
 
