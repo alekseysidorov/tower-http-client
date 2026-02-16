@@ -213,7 +213,7 @@
           };
           # Cargo crate publishing compatibility checks
           check-cargo-publish = pkgs.writeShellApplication {
-            name = "publish-crate";
+            name = "run-cargo-publish-checks";
             runtimeInputs = [
               rustToolchains.stable
             ];
