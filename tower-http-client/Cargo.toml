@@ -6,93 +6,78 @@ readme = "README.md"
 
 version.workspace = true
 edition.workspace = true
-license.workspace = true
-repository.workspace = true
-categories.workspace = true
-keywords.workspace = true
 rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-tower-reqwest = { workspace = true, optional = true }
-
 bytes = { workspace = true }
-criterion = { workspace = true, features = ["async_tokio"] }
 futures-util = { workspace = true }
-headers = { workspace = true, optional = true }
 http = { workspace = true }
 http-body = { workspace = true }
 http-body-reader = { workspace = true }
 http-body-util = { workspace = true }
 include-utils = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true, optional = true }
-serde_urlencoded = { workspace = true, optional = true }
 thiserror = { workspace = true }
 tower = { workspace = true, default-features = false, features = ["util"] }
 tower-layer = { workspace = true }
 tower-service = { workspace = true }
 url = { workspace = true }
 
-[dev-dependencies]
-tower-reqwest = { workspace = true }
+headers = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+serde_urlencoded = { workspace = true, optional = true }
 
+[dev-dependencies]
 anyhow = { workspace = true }
 async-trait = { workspace = true }
 axum = { workspace = true }
+criterion = { workspace = true, features = ["async_tokio"] }
 reqwest = { workspace = true, features = ["json"] }
 reqwest-middleware = { workspace = true }
 retry-policies = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 tokio = { workspace = true }
-tower = { workspace = true, features = ["util", "buffer", "limit", "retry"] }
+tower = { workspace = true, features = ["buffer", "limit", "retry", "util"] }
 tower-http = { workspace = true, features = [
-  "set-header",
-  "util",
   "map-request-body",
   "map-response-body",
+  "set-header",
+  "util",
 ] }
+tower-reqwest = { workspace = true }
 wiremock = { workspace = true }
 
 [features]
-default = ["json", "reqwest", "form", "typed-header"]
-json = ["dep:serde_json", "http-body-reader/json"]
-reqwest = ["dep:tower-reqwest"]
+default = ["form", "json", "typed-header"]
 form = ["dep:serde_urlencoded", "http-body-reader/form"]
+json = ["dep:serde_json", "http-body-reader/json"]
 typed-header = ["dep:headers"]
-
-[lints]
-workspace = true
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
-
-[[example]]
-name = "rate_limiter"
-required-features = ["reqwest"]
-
-[[example]]
-name = "retry"
-required-features = ["reqwest"]
 
 [[example]]
 name = "send_json"
-required-features = ["reqwest", "json"]
+required-features = ["json"]
 
 [[example]]
 name = "send_form"
-required-features = ["reqwest", "form"]
+required-features = ["form"]
 
 [[example]]
 name = "boxed_client"
-required-features = ["reqwest", "json"]
-
-[[test]]
-name = "service_ext"
-required-features = ["reqwest"]
+required-features = ["json"]
 
 [[bench]]
-name = "client"
-required-features = ["reqwest", "json"]
 harness = false
+name = "client"
+required-features = ["json"]
+
+[lints]
+workspace = true

@@ -8,9 +8,21 @@ and this project adheres to
 
 ## [Unreleased]
 
+- **breaking:** Improved integration with `reqwest`: request body conversion now
+  uses `reqwest::Body::wrap` instead of `into_reqwest_body` method.
+  `ClientRequestBuilder` method `without_body` now returns a `Bytes` type in
+  order to improve compatibility with other HTTP clients.
+- **breaking:** Renamed `build` method to `without_body` in `ClientRequest` to
+  better reflect its purpose and improve API clarity.
+- **breaking:** Removed `reqwest` dependency from `tower-http-client` to
+  eliminate dependency on specific versions of `reqwest`. The crate is now fully
+  generic and does not tie to any HTTP client implementation. Users needing
+  `reqwest`-specific features should use **`tower-reqwest`** directly.
+- **breaking:** Updated the request adapter (`HttpClientService` /
+  `ExecuteRequestFuture`) to propagate `S::Error` directly (now constrained to
+  `request::Error`) instead of wrapping it in a crate-specific error type.
 - Refactored `ExecuteRequestFuture` in `tower-reqwest` to remove unnecessary
   double pinning, simplifying the internal structure.
-- Bump minimum supported Rust version to `1.89.0`.
 
 ## [0.5.3] - 2025.09.23
 

@@ -4,7 +4,7 @@ use http_body_util::{BodyExt as _, combinators::BoxBody};
 use serde::Deserialize;
 use tower::{BoxError, Service, ServiceBuilder, util::BoxCloneSyncService};
 use tower_http::ServiceBuilderExt;
-use tower_http_client::{ResponseExt as _, ServiceExt, adapters::reqwest::into_reqwest_body};
+use tower_http_client::{ResponseExt as _, ServiceExt};
 use tower_reqwest::HttpClientLayer;
 
 /// A body that can be cloned in order to be sent multiple times.
@@ -17,7 +17,7 @@ type HttpClient = BoxCloneSyncService<
 >;
 
 /// Convert a `reqwest::Client` into an implementation-agnostic opaque client.
-fn into_opaque_http_client(
+fn into_tower_http_client(
     client: reqwest::Client,
 ) -> impl Send
 + Clone
@@ -30,7 +30,7 @@ fn into_opaque_http_client(
     ServiceBuilder::new()
         .map_err(BoxError::from)
         .map_response_body(|body: reqwest::Body| body.map_err(BoxError::from).boxed())
-        .map_request_body(into_reqwest_body)
+        .map_request_body(reqwest::Body::wrap)
         .layer(HttpClientLayer)
         .service(client)
 }
@@ -45,7 +45,7 @@ struct IpInfo {
 async fn main() -> Result<(), BoxError> {
     eprintln!("-> Creating an HTTP client with Tower layers...");
     // First of all, we create an opaque client using the reqwest client.
-    let opaque_client = into_opaque_http_client(reqwest::Client::new());
+    let opaque_client = into_tower_http_client(reqwest::Client::new());
     // Secondary we add some middleware to the client and then box it.
     let mut client: HttpClient = ServiceBuilder::new()
         .layer_fn(BoxCloneSyncService::new)

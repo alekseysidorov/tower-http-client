@@ -1,7 +1,4 @@
-use http::{
-    Uri,
-    uri::{self},
-};
+use http::{Uri, uri};
 use private::Sealed;
 
 /// A helper trait to try to convert some types into `Uri`.
