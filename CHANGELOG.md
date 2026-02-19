@@ -23,6 +23,8 @@ and this project adheres to
   `request::Error`) instead of wrapping it in a crate-specific error type.
 - Refactored `ExecuteRequestFuture` in `tower-reqwest` to remove unnecessary
   double pinning, simplifying the internal structure.
+- Remove `doc_auto_cfg` attribute
+  [PR](https://github.com/rust-lang/rust/pull/138907).
 
 ## [0.5.3] - 2025.09.23
 
