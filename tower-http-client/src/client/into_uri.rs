@@ -87,6 +87,7 @@ impl IntoUri for uri::Parts {
     }
 }
 
+#[cfg(feature = "url")]
 impl IntoUri for url::Url {
     type TryInto = String;
 
@@ -95,6 +96,7 @@ impl IntoUri for url::Url {
     }
 }
 
+#[cfg(feature = "url")]
 impl<'a> IntoUri for &'a url::Url {
     type TryInto = &'a str;
 
@@ -105,6 +107,7 @@ impl<'a> IntoUri for &'a url::Url {
 
 mod private {
     use http::{Uri, uri};
+    #[cfg(feature = "url")]
     use url::Url;
 
     pub trait Sealed {}
@@ -121,10 +124,13 @@ mod private {
     impl Sealed for &Vec<u8> {}
     impl Sealed for &[u8] {}
 
+    #[cfg(feature = "url")]
     impl Sealed for Url {}
+    #[cfg(feature = "url")]
     impl Sealed for &Url {}
 }
 
+#[cfg(feature = "url")]
 #[cfg(test)]
 mod tests {
     use http::Uri;
