@@ -26,10 +26,8 @@ required-features = ["auth"]
 
 [dependencies]
 base64 = { workspace = true, optional = true }
-bytes = { workspace = true }
 futures-util = { workspace = true }
 http = { workspace = true }
-http-body = { workspace = true }
 http-body-util = { workspace = true }
 include-utils = { workspace = true }
 pin-project = { workspace = true }
