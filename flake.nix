@@ -175,6 +175,7 @@
             nativeBuildInputs = buildInputs ++ [
               rustToolchains.stable
               treefmt.wrapper
+              pkgs.cargo-machete
             ];
             # Nightly compiler to run miri tests
             nightly = pkgs.mkShell {

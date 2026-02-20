@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+- **Breaking:** `url`, `serde` dependencies are now optional. Some functionality
+  has been moved behind feature flags `serde` and `url`.
 - Add the `MakeHeaderValue` trait bound to the `SetRequestHeaderLayer` generic
   parameter in the `tower-request` crate (otherwise the resulting type won't
   implement `Service`)

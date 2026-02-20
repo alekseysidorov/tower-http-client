@@ -20,13 +20,11 @@ rustdoc-args = ["--cfg", "docsrs"]
 bytes = { workspace = true }
 futures-util = { workspace = true }
 http = { workspace = true }
-http-body = { workspace = true }
 http-body-reader = { workspace = true }
 http-body-util = { workspace = true }
 include-utils = { workspace = true }
 thiserror = { workspace = true }
 tower = { workspace = true, default-features = false, features = ["util"] }
-tower-layer = { workspace = true }
 tower-service = { workspace = true }
 
 headers = { workspace = true, optional = true }
