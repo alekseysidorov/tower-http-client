@@ -145,7 +145,6 @@ mod tests {
         let request = http::request::Builder::new()
             .method(http::Method::GET)
             .uri(format!("{mock_uri}/hello"))
-            // TODO Make in easy to create requests without body.
             .body(reqwest::Body::default())?;
 
         let response = ServiceBuilder::new()
@@ -158,7 +157,6 @@ mod tests {
         let info = Info::from_body(response.into_body()).await?;
         assert!(info.request_id.is_none());
 
-        // TODO Find the way to avoid cloning the service.
         let service = ServiceBuilder::new()
             .override_response_header(USER_AGENT, HeaderValue::from_static("tower-reqwest"))
             .set_x_request_id(MakeRequestUuid)
@@ -171,7 +169,6 @@ mod tests {
         let request = http::request::Builder::new()
             .method(http::Method::GET)
             .uri(format!("{mock_uri}/hello"))
-            // TODO Make in easy to create requests without body.
             .body(reqwest::Body::default())?;
         let response = service
             .clone()
