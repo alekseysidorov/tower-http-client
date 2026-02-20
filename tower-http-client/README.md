@@ -45,6 +45,8 @@ fn make_client(client: reqwest::Client) -> HttpClient {
     ServiceBuilder::new()
         // Add some layers.
         .override_request_header(USER_AGENT, HeaderValue::from_static("tower-http-client"))
+        // Convert a generic body type into `reqwest::Body`.
+        .map_request_body(reqwest::Body::wrap)
         // Make client compatible with the `tower-http` layers.
         .layer(HttpClientLayer)
         .service(client)

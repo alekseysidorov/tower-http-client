@@ -52,7 +52,7 @@ pub trait RequestBuilderExt: Sized + Sealed {
     /// equivalent to calling [`headers::HeaderMapExt::typed_insert`].
     #[must_use]
     #[cfg(feature = "typed-header")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "typed_header")))]
+    #[cfg_attr(docsrs, doc(cfg(feature = "typed-header")))]
     fn typed_header<T>(self, header: T) -> Self
     where
         T: headers::Header;
@@ -94,7 +94,7 @@ impl RequestBuilderExt for http::request::Builder {
     }
 
     #[cfg(feature = "typed-header")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "typed_header")))]
+    #[cfg_attr(docsrs, doc(cfg(feature = "typed-header")))]
     fn typed_header<T>(mut self, header: T) -> Self
     where
         T: headers::Header,

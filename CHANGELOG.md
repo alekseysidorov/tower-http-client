@@ -118,5 +118,5 @@ and this project adheres to
   with adapters for `tower-http` and [`tower-http-client`] with the useful utils
   and extensions for creating an clients.
 
-[`tower-http-client`]: tower-reqwest
-[`tower-reqwest`]: tower-http-client
+[`tower-http-client`]: tower-http-client
+[`tower-reqwest`]: tower-reqwest

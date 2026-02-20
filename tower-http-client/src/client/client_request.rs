@@ -106,7 +106,7 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     /// equivalent to calling [`headers::HeaderMapExt::typed_insert`].
     #[must_use]
     #[cfg(feature = "typed-header")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "typed_header")))]
+    #[cfg_attr(docsrs, doc(cfg(feature = "typed-header")))]
     pub fn typed_header<T>(mut self, header: T) -> Self
     where
         T: headers::Header,
