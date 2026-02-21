@@ -20,6 +20,7 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     fenix.url = "github:nix-community/fenix/monthly";
     crane.url = "github:ipetkov/crane";
     treefmt-nix.url = "github:numtide/treefmt-nix";
@@ -30,6 +31,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-unstable,
       flake-utils,
       fenix,
       crane,
@@ -40,7 +42,7 @@
       let
         # Common nix packages
         pkgs = nixpkgs.legacyPackages.${system};
-
+        pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
         # Fenix Rust toolchains
         fenixPackage = fenix.packages.${system};
 
@@ -55,7 +57,6 @@
           msrv = (fenixPackage.fromToolchainName msrv).defaultToolchain;
           nightly = fenixPackage.complete.withComponents [ "rustfmt" ];
         };
-
         # Crane library for building Rust packages
         craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchains.msrv;
 
@@ -89,8 +90,6 @@
         # Common arguments for all crane builds
         commonArgs = {
           inherit src;
-          pname = "tower-http-client-workspace";
-          version = "0.6.0";
           strictDeps = true;
           nativeBuildInputs = buildInputs;
           cargoVendorDir = craneLib.vendorCargoDeps {
@@ -197,19 +196,11 @@
           # Semver compatibility checks (requires network access to crates.io)
           check-semver = pkgs.writeShellApplication {
             name = "run-semver-checks";
-            runtimeInputs =
-              let
-                # FIXME: Remove this override once https://github.com/NixOS/nixpkgs/issues/413204 is fixed.
-                cargo-semver-checks = pkgs.cargo-semver-checks.overrideAttrs (old: {
-                  doCheck = false;
-                  checkPhase = "true";
-                });
-              in
-              [
-                rustToolchains.msrv
-                cargo-semver-checks
-              ]
-              ++ buildInputs;
+            runtimeInputs = [
+              rustToolchains.stable
+              pkgs-unstable.cargo-semver-checks
+            ]
+            ++ buildInputs;
             text = "cargo semver-checks";
           };
           # Cargo crate publishing compatibility checks
