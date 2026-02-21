@@ -203,7 +203,7 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
         self,
         form: &T,
     ) -> Result<
-        ClientRequest<'a, S, Err, String, RespBody>,
+        ClientRequest<'a, S, Err, Bytes, RespBody>,
         super::request_ext::SetBodyError<serde_urlencoded::ser::Error>,
     > {
         use super::RequestBuilderExt as _;
@@ -251,11 +251,14 @@ impl<'a, S, Err, RespBody> ClientRequest<'a, S, Err, (), RespBody> {
 }
 
 impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
-    /// Sends the request to the target URI.
+    /// Sends the request to the target URI without a body.
+    ///
+    /// This is a shorthand for `self.without_body().send()`. The service's
+    /// request body type must implement `From<Bytes>`.
     ///
     /// # Panics
     ///
-    /// - if the `ReqBody` is not valid body.
+    /// - if erroneous data was passed during the query building process.
     pub fn send<ReqBody>(
         self,
     ) -> impl Future<Output = Result<http::Response<RespBody>, Err>> + use<'a, S, Err, RespBody, ReqBody>
@@ -263,13 +266,9 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
         S: Service<http::Request<ReqBody>, Response = http::Response<RespBody>, Error = Err>,
         S::Future: Send + 'static,
         S::Error: 'static,
-        ReqBody: Default,
+        ReqBody: From<Bytes>,
     {
-        let request = self
-            .builder
-            .body(ReqBody::default())
-            .expect("failed to build request without a body");
-        self.service.execute(request)
+        self.without_body().send::<ReqBody>()
     }
 }
 

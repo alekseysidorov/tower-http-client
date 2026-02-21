@@ -43,7 +43,7 @@ pub trait RequestBuilderExt: Sized + Sealed {
     fn form<T: serde::Serialize + ?Sized>(
         self,
         form: &T,
-    ) -> Result<http::Request<String>, SetBodyError<serde_urlencoded::ser::Error>>;
+    ) -> Result<http::Request<bytes::Bytes>, SetBodyError<serde_urlencoded::ser::Error>>;
 
     /// Appends a typed header to this request.
     ///
@@ -80,7 +80,7 @@ impl RequestBuilderExt for http::request::Builder {
     fn form<T: serde::Serialize + ?Sized>(
         mut self,
         form: &T,
-    ) -> Result<http::Request<String>, SetBodyError<serde_urlencoded::ser::Error>> {
+    ) -> Result<http::Request<bytes::Bytes>, SetBodyError<serde_urlencoded::ser::Error>> {
         use http::{HeaderValue, header::CONTENT_TYPE};
 
         let string = serde_urlencoded::to_string(form).map_err(SetBodyError::Encode)?;
@@ -90,7 +90,9 @@ impl RequestBuilderExt for http::request::Builder {
                 HeaderValue::from_static("application/x-www-form-urlencoded"),
             );
         }
-        self.body(string).map_err(SetBodyError::Body)
+
+        self.body(bytes::Bytes::from(string))
+            .map_err(SetBodyError::Body)
     }
 
     #[cfg(feature = "typed-header")]

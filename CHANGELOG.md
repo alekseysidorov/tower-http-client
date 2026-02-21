@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+- **breaking:** Unified body types across `ClientRequestBuilder` methods.
+  `form()` now returns `Bytes` instead of `String`, and `send()` on the builder
+  requires `From<Bytes>` instead of `Default`. All standard body-producing
+  methods (`send`, `without_body`, `json`, `form`) now uniformly produce
+  `Bytes`, requiring only a single `From<Bytes>` bound on the service request
+  body type.
 - **Breaking:** `url` and `serde` dependencies are now optional. Some
   functionality has been moved behind feature flags `json` / `form` (enabling
   `serde`) and `url`.
