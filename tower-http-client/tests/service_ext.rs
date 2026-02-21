@@ -101,8 +101,8 @@ async fn test_service_ext_without_body() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "json")]
 #[tokio::test]
+#[cfg(feature = "json")]
 async fn test_service_ext_put_json() -> anyhow::Result<()> {
     use http::header::CONTENT_TYPE;
     use tower_http_client::client::ResponseExt as _;
@@ -154,8 +154,8 @@ async fn test_service_ext_put_json() -> anyhow::Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "typed-header")]
 #[tokio::test]
+#[cfg(feature = "typed-header")]
 async fn test_service_ext_typed_header() -> anyhow::Result<()> {
     use headers::{HeaderMapExt as _, UserAgent};
     use wiremock::Request;
