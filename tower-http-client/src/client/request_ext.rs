@@ -63,21 +63,14 @@ pub trait RequestBuilderExt: Sized + Sealed {
     /// and replaces the existing query string of the URL entirely. Any previously
     /// set query parameters are discarded.
     ///
-    /// ```text
-    /// // "existing=1" is lost
-    /// .uri("http://example.com/path?existing=1")
-    /// .query(&[("key", "value")])
-    /// // => "http://example.com/path?key=value"
-    /// ```
+    /// # Notes
     ///
-    /// Duplicate keys are preserved as-is:
-    /// `.query(&[("foo", "a"), ("foo", "b")])` produces `"foo=a&foo=b"`.
+    /// - Duplicate keys are preserved as-is:
+    ///   `.query(&[("foo", "a"), ("foo", "b")])` produces `"foo=a&foo=b"`.
     ///
-    /// # Note
-    ///
-    /// This method does not support a single key-value tuple directly.
-    /// Use a slice like `.query(&[("key", "val")])` instead.
-    /// Structs and maps that serialize into key-value pairs are also supported.
+    /// - This method does not support a single key-value tuple directly.
+    ///   Use a slice like `.query(&[("key", "val")])` instead.
+    ///   Structs and maps that serialize into key-value pairs are also supported.
     ///
     /// # Errors
     ///
