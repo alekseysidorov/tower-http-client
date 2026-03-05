@@ -1612,6 +1612,7 @@ dependencies = [
  "http-body-reader",
  "http-body-util",
  "include-utils",
+ "pretty_assertions",
  "reqwest",
  "reqwest-middleware",
  "retry-policies",

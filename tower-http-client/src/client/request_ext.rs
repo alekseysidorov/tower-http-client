@@ -153,3 +153,39 @@ mod private {
 
     impl Sealed for http::request::Builder {}
 }
+
+#[cfg(all(test, feature = "query"))]
+mod query_tests {
+    use pretty_assertions::assert_eq;
+    use tower_http::BoxError;
+
+    use super::*;
+
+    #[test]
+    fn test_query_happy_path() -> Result<(), BoxError> {
+        let request = http::Request::builder()
+            .uri("http://example.com/path")
+            .query(&[("key", "value")])?
+            .body(())?;
+
+        assert_eq!(request.uri().query(), Some("key=value"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_query_without_uri() -> Result<(), BoxError> {
+        let request = http::Request::builder()
+            .query(&[("key", "value")])?
+            .body(())?;
+
+        assert_eq!(request.uri().query(), Some("key=value"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_query_invalid() {
+        let error = http::Request::builder().query(&42).unwrap_err();
+
+        assert!(matches!(error, SetQueryError::Encode(_)));
+    }
+}
