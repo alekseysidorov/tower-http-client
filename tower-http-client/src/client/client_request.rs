@@ -239,14 +239,14 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
     ///
     /// # Errors
     ///
-    /// Returns a [`super::request_ext::SetQueryError`] if the provided value cannot be serialized
-    /// into a query string, or if the resulting URI is invalid.
+    /// Returns a [`serde_urlencoded::ser::Error`] if the provided value cannot be serialized
+    /// into a query string.
     #[cfg(feature = "query")]
     #[cfg_attr(docsrs, doc(cfg(feature = "query")))]
     pub fn query<T: serde::Serialize + ?Sized>(
         mut self,
         value: &T,
-    ) -> Result<Self, super::request_ext::SetQueryError> {
+    ) -> Result<Self, serde_urlencoded::ser::Error> {
         use super::RequestBuilderExt as _;
 
         self.builder = self.builder.query(value)?;

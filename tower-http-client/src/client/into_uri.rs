@@ -6,7 +6,7 @@ use private::Sealed;
 /// This trait is sealed and implemented only for the most suitable types.
 ///
 /// Unlike the similar trait in the Reqwest, this one describes a type's representation
-/// that implements [`TryInto<Uri>`]. This approach can pass third-party types  like [`url::Url`]
+/// that implements [`TryInto<Uri>`]. This approach can pass third-party types like `url::Url`
 /// directly to the [`http::request::Builder::uri`] without any wrappers.
 pub trait IntoUri: Sealed {
     /// Which kind of value should be converted to the Uri via [`TryInto<Uri>`]

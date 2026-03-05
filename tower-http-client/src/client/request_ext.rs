@@ -13,20 +13,6 @@ pub enum SetBodyError<S> {
     Encode(S),
 }
 
-/// An error that can occur when setting a query string on a request.
-#[cfg(feature = "query")]
-#[cfg_attr(docsrs, doc(cfg(feature = "query")))]
-#[derive(Debug, Error)]
-#[error(transparent)]
-pub enum SetQueryError {
-    /// The resulting URI is invalid.
-    InvalidUri(http::uri::InvalidUri),
-    /// The resulting URI parts are invalid.
-    InvalidUriParts(http::uri::InvalidUriParts),
-    /// An error occurred while serializing the query parameters.
-    Encode(serde_urlencoded::ser::Error),
-}
-
 /// Extension trait for the [`http::request::Builder`].
 pub trait RequestBuilderExt: Sized + Sealed {
     /// Appends a typed header to this request.
@@ -95,11 +81,14 @@ pub trait RequestBuilderExt: Sized + Sealed {
     ///
     /// # Errors
     ///
-    /// Returns a [`SetQueryError`] if the provided value cannot be serialized
-    /// into a query string, or if the resulting URI is invalid.
+    /// Returns a [`serde_urlencoded::ser::Error`] if the provided value cannot be serialized
+    /// into a query string.
     #[cfg(feature = "query")]
     #[cfg_attr(docsrs, doc(cfg(feature = "query")))]
-    fn query<T: serde::Serialize + ?Sized>(self, query: &T) -> Result<Self, SetQueryError>;
+    fn query<T: serde::Serialize + ?Sized>(
+        self,
+        query: &T,
+    ) -> Result<Self, serde_urlencoded::ser::Error>;
 }
 
 impl RequestBuilderExt for http::request::Builder {
@@ -155,7 +144,10 @@ impl RequestBuilderExt for http::request::Builder {
 
     #[cfg(feature = "query")]
     #[cfg_attr(docsrs, doc(cfg(feature = "query")))]
-    fn query<T: serde::Serialize + ?Sized>(self, query: &T) -> Result<Self, SetQueryError> {
+    fn query<T: serde::Serialize + ?Sized>(
+        self,
+        query: &T,
+    ) -> Result<Self, serde_urlencoded::ser::Error> {
         use http::uri::PathAndQuery;
 
         let mut parts = self.uri_ref().cloned().unwrap_or_default().into_parts();
@@ -166,13 +158,15 @@ impl RequestBuilderExt for http::request::Builder {
                 .as_ref()
                 .map_or_else(|| "/", |pq| pq.path());
 
-            let query_string = serde_urlencoded::to_string(query).map_err(SetQueryError::Encode)?;
+            let query_string = serde_urlencoded::to_string(query)?;
             let pq_str = [path, "?", &query_string].concat();
-            PathAndQuery::try_from(pq_str).map_err(SetQueryError::InvalidUri)?
+            // serde_urlencoded always produces valid ASCII, so this can never fail.
+            PathAndQuery::try_from(pq_str).expect("invalid path and query after encoding")
         };
 
         parts.path_and_query = Some(new_path_and_query);
-        let uri = http::Uri::from_parts(parts).map_err(SetQueryError::InvalidUriParts)?;
+        // The parts came from a valid URI with only path_and_query replaced, so this can never fail.
+        let uri = http::Uri::from_parts(parts).expect("invalid URI parts after setting query");
 
         Ok(self.uri(uri))
     }
@@ -279,8 +273,6 @@ mod query_tests {
     #[test]
     fn test_query_encode_error() {
         // Scalars (e.g. integers) are not supported by serde_urlencoded
-        let error = http::Request::builder().query(&42).unwrap_err();
-
-        assert!(matches!(error, SetQueryError::Encode(_)));
+        let _error: serde_urlencoded::ser::Error = http::Request::builder().query(&42).unwrap_err();
     }
 }
