@@ -13,13 +13,17 @@ pub enum SetBodyError<S> {
     Encode(S),
 }
 
+/// An error that can occur when setting a query string on a request.
 #[cfg(feature = "query")]
 #[cfg_attr(docsrs, doc(cfg(feature = "query")))]
 #[derive(Debug, Error)]
 #[error(transparent)]
 pub enum SetQueryError {
+    /// The resulting URI is invalid.
     InvalidUri(http::uri::InvalidUri),
+    /// The resulting URI parts are invalid.
     InvalidUriParts(http::uri::InvalidUriParts),
+    /// An error occurred while serializing the query parameters.
     Encode(serde_urlencoded::ser::Error),
 }
 
@@ -67,6 +71,32 @@ pub trait RequestBuilderExt: Sized + Sealed {
         form: &T,
     ) -> Result<http::Request<bytes::Bytes>, SetBodyError<serde_urlencoded::ser::Error>>;
 
+    /// Sets the query string of the URL.
+    ///
+    /// Serializes the given value into a query string using [`serde_urlencoded`]
+    /// and replaces the existing query string of the URL entirely. Any previously
+    /// set query parameters are discarded.
+    ///
+    /// ```text
+    /// // "existing=1" is lost
+    /// .uri("http://example.com/path?existing=1")
+    /// .query(&[("key", "value")])
+    /// // => "http://example.com/path?key=value"
+    /// ```
+    ///
+    /// Duplicate keys are preserved as-is:
+    /// `.query(&[("foo", "a"), ("foo", "b")])` produces `"foo=a&foo=b"`.
+    ///
+    /// # Note
+    ///
+    /// This method does not support a single key-value tuple directly.
+    /// Use a slice like `.query(&[("key", "val")])` instead.
+    /// Structs and maps that serialize into key-value pairs are also supported.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`SetQueryError`] if the provided value cannot be serialized
+    /// into a query string, or if the resulting URI is invalid.
     #[cfg(feature = "query")]
     #[cfg_attr(docsrs, doc(cfg(feature = "query")))]
     fn query<T: serde::Serialize + ?Sized>(self, query: &T) -> Result<Self, SetQueryError>;
@@ -162,7 +192,7 @@ mod query_tests {
     use super::*;
 
     #[test]
-    fn test_query_happy_path() -> Result<(), BoxError> {
+    fn test_query_basic() -> Result<(), BoxError> {
         let request = http::Request::builder()
             .uri("http://example.com/path")
             .query(&[("key", "value")])?
@@ -183,7 +213,72 @@ mod query_tests {
     }
 
     #[test]
-    fn test_query_invalid() {
+    fn test_query_overwrites_existing() -> Result<(), BoxError> {
+        let request = http::Request::builder()
+            .uri("http://example.com/path?existing=1")
+            .query(&[("key", "value")])?
+            .body(())?;
+
+        // "existing=1" must be gone
+        assert_eq!(request.uri().query(), Some("key=value"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_query_last_call_wins() -> Result<(), BoxError> {
+        let request = http::Request::builder()
+            .uri("http://example.com/path")
+            .query(&[("first", "1")])?
+            .query(&[("second", "2")])?
+            .body(())?;
+
+        // Only the last call survives
+        assert_eq!(request.uri().query(), Some("second=2"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_query_duplicate_keys() -> Result<(), BoxError> {
+        let request = http::Request::builder()
+            .uri("http://example.com/path")
+            .query(&[("foo", "a"), ("foo", "b")])?
+            .body(())?;
+
+        assert_eq!(request.uri().query(), Some("foo=a&foo=b"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_query_struct() -> Result<(), BoxError> {
+        #[derive(serde::Serialize)]
+        struct Params {
+            page: u32,
+            limit: u32,
+        }
+
+        let request = http::Request::builder()
+            .uri("http://example.com/path")
+            .query(&Params { page: 2, limit: 10 })?
+            .body(())?;
+
+        assert_eq!(request.uri().query(), Some("page=2&limit=10"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_query_special_characters_are_encoded() -> Result<(), BoxError> {
+        let request = http::Request::builder()
+            .uri("http://example.com/path")
+            .query(&[("key", "hello world")])?
+            .body(())?;
+
+        assert_eq!(request.uri().query(), Some("key=hello+world"));
+        Ok(())
+    }
+
+    #[test]
+    fn test_query_encode_error() {
+        // Scalars (e.g. integers) are not supported by serde_urlencoded
         let error = http::Request::builder().query(&42).unwrap_err();
 
         assert!(matches!(error, SetQueryError::Encode(_)));
