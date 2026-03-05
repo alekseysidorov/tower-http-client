@@ -60,3 +60,6 @@ missing_errors_doc = "allow"
 
 [workspace.lints.rustdoc]
 broken_intra_doc_links = "deny"
+
+[workspace.metadata.crane]
+name = "tower-http-client"

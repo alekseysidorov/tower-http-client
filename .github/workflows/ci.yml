@@ -20,9 +20,9 @@ jobs:
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: "Run semver compatibility checks"
-        run: nix run .#check-semver
+        run: nix run .#check-cargo-semver -L
       - name: "Run cargo publish compatibility checks"
-        run: nix run .#check-cargo-publish
+        run: nix run .#check-cargo-publish -L
 
   tests:
     strategy:
@@ -39,4 +39,4 @@ jobs:
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: "Run tests"
-        run: nix flake check
+        run: nix flake check -L
