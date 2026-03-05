@@ -16,14 +16,6 @@ categories.workspace = true
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
-[[example]]
-name = "set_header"
-required-features = ["set-header"]
-
-[[example]]
-name = "add_authorization"
-required-features = ["auth"]
-
 [dependencies]
 base64 = { workspace = true, optional = true }
 futures-util = { workspace = true }
@@ -50,6 +42,14 @@ wiremock = { workspace = true }
 default = []
 auth = ["dep:base64"]
 set-header = []
+
+[[example]]
+name = "set_header"
+required-features = ["set-header"]
+
+[[example]]
+name = "add_authorization"
+required-features = ["auth"]
 
 [lints]
 workspace = true

@@ -43,8 +43,9 @@
         };
 
         # Common runtime inputs used in this project.
-        runtimeInputs = [
+        runtimeInputs = with pkgs; [
           rustToolchains.stable
+          cargo-machete
         ];
 
         # Import rust dev flake
