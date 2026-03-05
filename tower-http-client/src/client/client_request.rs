@@ -214,6 +214,18 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
             _phantom: PhantomData,
         })
     }
+
+    #[cfg(feature = "query")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "query")))]
+    pub fn query<T: serde::Serialize + ?Sized>(
+        mut self,
+        value: &T,
+    ) -> Result<Self, super::request_ext::SetQueryError> {
+        use super::RequestBuilderExt as _;
+
+        self.builder = self.builder.query(value)?;
+        Ok(self)
+    }
 }
 
 impl<S, Err, RespBody> std::fmt::Debug for ClientRequestBuilder<'_, S, Err, RespBody> {

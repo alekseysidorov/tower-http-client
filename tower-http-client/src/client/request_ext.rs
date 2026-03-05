@@ -13,8 +13,30 @@ pub enum SetBodyError<S> {
     Encode(S),
 }
 
+#[cfg(feature = "query")]
+#[cfg_attr(docsrs, doc(cfg(feature = "query")))]
+#[derive(Debug, Error)]
+#[error(transparent)]
+pub enum SetQueryError {
+    InvalidUri(http::uri::InvalidUri),
+    InvalidUriParts(http::uri::InvalidUriParts),
+    Encode(serde_urlencoded::ser::Error),
+}
+
 /// Extension trait for the [`http::request::Builder`].
 pub trait RequestBuilderExt: Sized + Sealed {
+    /// Appends a typed header to this request.
+    ///
+    /// This function will append the provided header as a header to the
+    /// internal [`http::HeaderMap`] being constructed.  Essentially this is
+    /// equivalent to calling [`headers::HeaderMapExt::typed_insert`].
+    #[must_use]
+    #[cfg(feature = "typed-header")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "typed-header")))]
+    fn typed_header<T>(self, header: T) -> Self
+    where
+        T: headers::Header;
+
     /// Sets a JSON body for this request.
     ///
     /// Additionally this method adds a `CONTENT_TYPE` header for JSON body.
@@ -45,20 +67,26 @@ pub trait RequestBuilderExt: Sized + Sealed {
         form: &T,
     ) -> Result<http::Request<bytes::Bytes>, SetBodyError<serde_urlencoded::ser::Error>>;
 
-    /// Appends a typed header to this request.
-    ///
-    /// This function will append the provided header as a header to the
-    /// internal [`http::HeaderMap`] being constructed.  Essentially this is
-    /// equivalent to calling [`headers::HeaderMapExt::typed_insert`].
-    #[must_use]
-    #[cfg(feature = "typed-header")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "typed-header")))]
-    fn typed_header<T>(self, header: T) -> Self
-    where
-        T: headers::Header;
+    #[cfg(feature = "query")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "query")))]
+    fn query<T: serde::Serialize + ?Sized>(self, query: &T) -> Result<Self, SetQueryError>;
 }
 
 impl RequestBuilderExt for http::request::Builder {
+    #[cfg(feature = "typed-header")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "typed-header")))]
+    fn typed_header<T>(mut self, header: T) -> Self
+    where
+        T: headers::Header,
+    {
+        use headers::HeaderMapExt;
+
+        if let Some(headers) = self.headers_mut() {
+            headers.typed_insert(header);
+        }
+        self
+    }
+
     #[cfg(feature = "json")]
     #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
     fn json<T: serde::Serialize + ?Sized>(
@@ -95,18 +123,28 @@ impl RequestBuilderExt for http::request::Builder {
             .map_err(SetBodyError::Body)
     }
 
-    #[cfg(feature = "typed-header")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "typed-header")))]
-    fn typed_header<T>(mut self, header: T) -> Self
-    where
-        T: headers::Header,
-    {
-        use headers::HeaderMapExt;
+    #[cfg(feature = "query")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "query")))]
+    fn query<T: serde::Serialize + ?Sized>(self, query: &T) -> Result<Self, SetQueryError> {
+        use http::uri::PathAndQuery;
 
-        if let Some(headers) = self.headers_mut() {
-            headers.typed_insert(header);
-        }
-        self
+        let mut parts = self.uri_ref().cloned().unwrap_or_default().into_parts();
+        let new_path_and_query = {
+            // If the URI doesn't have a path, we need to set it to "/" so that the query string can be appended correctly.
+            let path = parts
+                .path_and_query
+                .as_ref()
+                .map_or_else(|| "/", |pq| pq.path());
+
+            let query_string = serde_urlencoded::to_string(query).map_err(SetQueryError::Encode)?;
+            let pq_str = [path, "?", &query_string].concat();
+            PathAndQuery::try_from(pq_str).map_err(SetQueryError::InvalidUri)?
+        };
+
+        parts.path_and_query = Some(new_path_and_query);
+        let uri = http::Uri::from_parts(parts).map_err(SetQueryError::InvalidUriParts)?;
+
+        Ok(self.uri(uri))
     }
 }
 
