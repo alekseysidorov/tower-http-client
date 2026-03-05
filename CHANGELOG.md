@@ -10,8 +10,8 @@ and this project adheres to
 
 - Added a `query` method to `ClientRequestBuilder` and `RequestBuilderExt` for
   setting URL query parameters from any `serde::Serialize` type. The method
-  replaces any existing query string entirely. Available behind the `query`
-  feature flag.
+  replaces any existing query string entirely. Enabled by default via the
+  `query` feature flag, can be opted out with `default-features = false`.
 
 - **breaking:** Unified body types across `ClientRequestBuilder` methods.
   `form()` now returns `Bytes` instead of `String`, and `send()` on the builder
