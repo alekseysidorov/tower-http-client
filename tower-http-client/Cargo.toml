@@ -61,7 +61,7 @@ form = ["dep:serde", "dep:serde_urlencoded", "http-body-reader/form"]
 json = ["dep:serde", "dep:serde_json", "http-body-reader/json"]
 url = ["dep:url"]
 typed-header = ["dep:headers"]
-query = ["dep:serde_urlencoded"]
+query = ["dep:serde", "dep:serde_urlencoded"]
 
 [[example]]
 name = "send_json"
