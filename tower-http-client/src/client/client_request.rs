@@ -214,6 +214,37 @@ impl<'a, S, Err, RespBody> ClientRequestBuilder<'a, S, Err, RespBody> {
             _phantom: PhantomData,
         })
     }
+
+    /// Sets the query string of the URL.
+    ///
+    /// Serializes the given value into a query string using [`serde_urlencoded`]
+    /// and replaces the existing query string of the URL entirely. Any previously
+    /// set query parameters are discarded.
+    ///
+    /// # Notes
+    ///
+    /// - Duplicate keys are preserved as-is:
+    ///   `.query(&[("foo", "a"), ("foo", "b")])` produces `"foo=a&foo=b"`.
+    ///
+    /// - This method does not support a single key-value tuple directly.
+    ///   Use a slice like `.query(&[("key", "val")])` instead.
+    ///   Structs and maps that serialize into key-value pairs are also supported.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [`serde_urlencoded::ser::Error`] if the provided value cannot be serialized
+    /// into a query string.
+    #[cfg(feature = "query")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "query")))]
+    pub fn query<T: serde::Serialize + ?Sized>(
+        mut self,
+        value: &T,
+    ) -> Result<Self, serde_urlencoded::ser::Error> {
+        use super::RequestBuilderExt as _;
+
+        self.builder = self.builder.query(value)?;
+        Ok(self)
+    }
 }
 
 impl<S, Err, RespBody> std::fmt::Debug for ClientRequestBuilder<'_, S, Err, RespBody> {

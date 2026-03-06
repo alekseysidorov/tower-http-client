@@ -1,4 +1,5 @@
 use http::{HeaderValue, header::USER_AGENT};
+use pretty_assertions::assert_eq;
 use reqwest::Client;
 use tower::ServiceBuilder;
 use tower_http::ServiceBuilderExt;
@@ -156,7 +157,7 @@ async fn test_service_ext_put_json() -> anyhow::Result<()> {
 
 #[tokio::test]
 #[cfg(feature = "typed-header")]
-async fn test_service_ext_typed_header() -> anyhow::Result<()> {
+async fn test_request_ext_typed_header() -> anyhow::Result<()> {
     use headers::{HeaderMapExt as _, UserAgent};
     use wiremock::Request;
 
@@ -183,6 +184,49 @@ async fn test_service_ext_typed_header() -> anyhow::Result<()> {
     let response = client
         .get(format!("{mock_uri}/hello"))
         .typed_header(UserAgent::from_static("wiremock"))
+        .send()
+        .await?;
+
+    assert!(response.status().is_success());
+
+    Ok(())
+}
+
+#[tokio::test]
+#[cfg(feature = "query")]
+async fn test_request_ext_query() -> anyhow::Result<()> {
+    use wiremock::Request;
+
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    struct Query {
+        id: &'static str,
+        next: &'static str,
+    }
+
+    let (mock_server, mock_uri) = utils::start_mock_server().await;
+
+    Mock::given(method("GET"))
+        .and(path("/hello"))
+        .respond_with(|req: &Request| {
+            let query = req.url.query().unwrap();
+            assert_eq!(query, "id=uid.1234&next=uid.1235");
+
+            ResponseTemplate::new(200)
+        })
+        // Mounting the mock on the mock server - it's now effective!
+        .mount(&mock_server)
+        .await;
+
+    let mut client = ServiceBuilder::new()
+        .layer(HttpClientLayer)
+        .service(Client::new());
+
+    let response = client
+        .get(format!("{mock_uri}/hello"))
+        .query(&Query {
+            id: "uid.1234",
+            next: "uid.1235",
+        })?
         .send()
         .await?;
 

@@ -38,6 +38,7 @@ anyhow = { workspace = true }
 async-trait = { workspace = true }
 axum = { workspace = true }
 criterion = { workspace = true, features = ["async_tokio"] }
+pretty_assertions = { workspace = true }
 reqwest = { workspace = true, features = ["json"] }
 reqwest-middleware = { workspace = true }
 retry-policies = { workspace = true }
@@ -55,11 +56,12 @@ tower-reqwest = { workspace = true }
 wiremock = { workspace = true }
 
 [features]
-default = ["form", "json", "typed-header"]
+default = ["form", "json", "typed-header", "query"]
 form = ["dep:serde", "dep:serde_urlencoded", "http-body-reader/form"]
 json = ["dep:serde", "dep:serde_json", "http-body-reader/json"]
 url = ["dep:url"]
 typed-header = ["dep:headers"]
+query = ["dep:serde", "dep:serde_urlencoded"]
 
 [[example]]
 name = "send_json"
