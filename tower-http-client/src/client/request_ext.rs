@@ -152,7 +152,11 @@ impl RequestBuilderExt for http::request::Builder {
                 .map_or_else(|| "/", |pq| pq.path());
 
             let query_string = serde_urlencoded::to_string(query)?;
-            let pq_str = [path, "?", &query_string].concat();
+            let pq_str = if query_string.is_empty() {
+                path.to_owned()
+            } else {
+                format!("{path}?{query_string}")
+            };
             // serde_urlencoded always produces valid ASCII, so this can never fail.
             PathAndQuery::try_from(pq_str).expect("invalid path and query after encoding")
         };
@@ -267,5 +271,21 @@ mod query_tests {
     fn test_query_encode_error() {
         // Scalars (e.g. integers) are not supported by serde_urlencoded
         let _error: serde_urlencoded::ser::Error = http::Request::builder().query(&42).unwrap_err();
+    }
+
+    #[test]
+    fn test_query_empty_serialization_clears_query() -> Result<(), BoxError> {
+        #[derive(serde::Serialize)]
+        struct Empty {}
+
+        let request = http::Request::builder()
+            .uri("/hello?old=1")
+            .query(&Empty {})?
+            .body(())?;
+
+        // The URI should be "/hello", not "/hello?"
+        assert_eq!(request.uri().path(), "/hello");
+        assert_eq!(request.uri().query(), None);
+        Ok(())
     }
 }
