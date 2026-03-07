@@ -155,7 +155,7 @@ impl RequestBuilderExt for http::request::Builder {
             let pq_str = if query_string.is_empty() {
                 path.to_owned()
             } else {
-                format!("{path}?{query_string}")
+                [path, "?", &query_string].concat()
             };
             // serde_urlencoded always produces valid ASCII, so this can never fail.
             PathAndQuery::try_from(pq_str).expect("invalid path and query after encoding")
