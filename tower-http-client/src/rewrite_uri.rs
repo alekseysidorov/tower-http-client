@@ -30,7 +30,7 @@
 //!
 //! let layer = RewriteUriLayer::new(|uri: &Uri| {
 //!     let base = pick_node();
-//!     let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
+//!     let path = uri.path_and_query().map_or("/", |pq| pq.as_str());
 //!     format!("{base}{path}").parse::<Uri>().map_err(http::Error::from)
 //! });
 //! ```
@@ -54,7 +54,7 @@
 //!
 //!     fn rewrite_uri(&mut self, uri: &Uri) -> Result<Uri, Self::Error> {
 //!         let base = &self.base;
-//!         let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
+//!         let path = uri.path_and_query().map_or("/", |pq| pq.as_str());
 //!         format!("{base}{path}").parse::<Uri>().map_err(http::Error::from)
 //!     }
 //! }
@@ -242,7 +242,7 @@ mod tests {
     async fn test_rewrite_uri_service_builder() {
         let mut svc = ServiceBuilder::new()
             .layer(RewriteUriLayer::new(|uri: &Uri| {
-                let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
+                let path = uri.path_and_query().map_or("/", |pq| pq.as_str());
                 Ok::<_, Infallible>(format!("http://example.com{path}").parse::<Uri>().unwrap())
             }))
             .service(capture_uri_service());
@@ -280,7 +280,7 @@ mod tests {
             type Error = Infallible;
 
             fn rewrite_uri(&mut self, uri: &Uri) -> Result<Uri, Self::Error> {
-                let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
+                let path = uri.path_and_query().map_or("/", |pq| pq.as_str());
                 Ok(format!("{}{path}", self.base).parse().unwrap())
             }
         }
