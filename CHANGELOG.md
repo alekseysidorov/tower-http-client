@@ -8,6 +8,13 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Added `rewrite_uri` module to `tower-http-client` with a `RewriteUri` trait
+  and the `RewriteUriLayer` / `RewriteUriService` Tower middleware pair.
+  Applications that build requests with relative URIs can now place host
+  selection (load balancing, environment switching, etc.) in a single reusable
+  layer instead of scattering `map_request` calls across the codebase.  Both
+  closures and custom structs implementing `RewriteUri` are supported.
+
 - Added a `query` method to `ClientRequestBuilder` and `RequestBuilderExt` for
   setting URL query parameters from any `serde::Serialize` type. The method
   replaces any existing query string entirely. Enabled by default via the

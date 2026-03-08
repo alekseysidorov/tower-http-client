@@ -6,33 +6,44 @@
 //!
 //! # Overview
 //!
-//! In many client setups the application builds requests using relative URIs,
-//! while the transport layer requires absolute URIs.  The [`RewriteUriLayer`]
-//! sits between the caller and the inner service and rewrites each request's
-//! URI before forwarding it.
+//! A common pattern in service-oriented architectures is for a client to
+//! construct requests with relative URIs (e.g. `/users/42`) while the actual
+//! target host is resolved later in the middleware stack — for example by a
+//! load balancer that picks a backend node, or by configuration that selects
+//! between staging and production environments.  [`RewriteUriLayer`] lets you
+//! place that host-selection logic in one place: it intercepts every outgoing
+//! request, calls your rewrite policy to produce the final absolute URI, and
+//! then forwards the modified request to the inner service.
 //!
 //! # Example
 //!
-//! Using a closure to prepend a base URL:
+//! Routing requests to a backend chosen at runtime (e.g. simple load
+//! balancing):
 //!
 //! ```rust
 //! use http::Uri;
 //! use tower::ServiceBuilder;
 //! use tower_http_client::rewrite_uri::RewriteUriLayer;
 //!
+//! // Imagine `pick_node()` returns the address of the least-loaded backend.
+//! fn pick_node() -> &'static str { "http://node-3.internal" }
+//!
 //! let layer = RewriteUriLayer::new(|uri: &Uri| {
+//!     let base = pick_node();
 //!     let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
-//!     format!("http://example.com{path}").parse::<Uri>().map_err(http::Error::from)
+//!     format!("{base}{path}").parse::<Uri>().map_err(http::Error::from)
 //! });
 //! ```
 //!
-//! Using a struct implementing [`RewriteUri`]:
+//! Using a struct implementing [`RewriteUri`] to switch between environments:
 //!
 //! ```rust
 //! use http::Uri;
-//! use tower::ServiceBuilder;
 //! use tower_http_client::rewrite_uri::{RewriteUri, RewriteUriLayer};
 //!
+//! /// Rewrites every request to target a fixed base URI, preserving the
+//! /// original path and query.  Useful for pointing a client at staging vs
+//! /// production without changing call sites.
 //! #[derive(Clone)]
 //! struct BaseUri {
 //!     base: Uri,
@@ -42,14 +53,9 @@
 //!     type Error = http::Error;
 //!
 //!     fn rewrite_uri(&mut self, uri: &Uri) -> Result<Uri, Self::Error> {
+//!         let base = &self.base;
 //!         let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
-//!         format!(
-//!             "{}{}",
-//!             self.base,
-//!             path
-//!         )
-//!         .parse::<Uri>()
-//!         .map_err(http::Error::from)
+//!         format!("{base}{path}").parse::<Uri>().map_err(http::Error::from)
 //!     }
 //! }
 //! ```
@@ -136,16 +142,6 @@ impl<S, R> RewriteUriService<S, R> {
     /// Create a new [`RewriteUriService`].
     pub fn new(inner: S, rewrite: R) -> Self {
         Self { inner, rewrite }
-    }
-
-    /// Returns a reference to the inner service.
-    pub fn inner(&self) -> &S {
-        &self.inner
-    }
-
-    /// Consumes `self`, returning the inner service.
-    pub fn into_inner(self) -> S {
-        self.inner
     }
 }
 
