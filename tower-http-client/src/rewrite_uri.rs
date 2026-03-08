@@ -207,11 +207,9 @@ mod tests {
     use super::{RewriteUri, RewriteUriLayer, RewriteUriService};
 
     /// A minimal service that returns the request URI as the response body.
-    fn capture_uri_service() -> impl tower_service::Service<
-        Request<()>,
-        Response = Response<String>,
-        Error = Infallible,
-    > {
+    fn capture_uri_service()
+    -> impl tower_service::Service<Request<()>, Response = Response<String>, Error = Infallible>
+    {
         service_fn(|req: Request<()>| async move {
             Ok::<_, Infallible>(Response::new(req.uri().to_string()))
         })
@@ -219,10 +217,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_rewrite_uri_with_closure() {
-        let mut svc = RewriteUriService::new(
-            capture_uri_service(),
-            |_uri: &Uri| Ok::<_, Infallible>(Uri::from_static("http://example.com/rewritten")),
-        );
+        let mut svc = RewriteUriService::new(capture_uri_service(), |_uri: &Uri| {
+            Ok::<_, Infallible>(Uri::from_static("http://example.com/rewritten"))
+        });
 
         let req = Request::builder().uri("/original").body(()).unwrap();
         let response = svc.call(req).await.unwrap();
@@ -246,9 +243,7 @@ mod tests {
         let mut svc = ServiceBuilder::new()
             .layer(RewriteUriLayer::new(|uri: &Uri| {
                 let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
-                Ok::<_, Infallible>(
-                    format!("http://example.com{path}").parse::<Uri>().unwrap(),
-                )
+                Ok::<_, Infallible>(format!("http://example.com{path}").parse::<Uri>().unwrap())
             }))
             .service(capture_uri_service());
 
@@ -261,14 +256,12 @@ mod tests {
     async fn test_rewrite_uri_error_propagates() {
         // Use String as a convenient non-Infallible error type for both service
         // and rewriter so that String: Into<String> is satisfied.
-        let inner = service_fn(|_: Request<()>| async {
-            Ok::<_, String>(Response::new("ok".to_string()))
-        });
+        let inner =
+            service_fn(|_: Request<()>| async { Ok::<_, String>(Response::new("ok".to_string())) });
 
-        let mut svc = RewriteUriService::new(
-            inner,
-            |_uri: &Uri| Err::<Uri, String>("rewrite failed".to_string()),
-        );
+        let mut svc = RewriteUriService::new(inner, |_uri: &Uri| {
+            Err::<Uri, String>("rewrite failed".to_string())
+        });
 
         let req = Request::builder().uri("/original").body(()).unwrap();
         let result = svc.call(req).await;
