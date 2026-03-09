@@ -1629,6 +1629,7 @@ dependencies = [
  "tokio",
  "tower",
  "tower-http",
+ "tower-layer",
  "tower-reqwest",
  "tower-service",
  "url",

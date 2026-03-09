@@ -14,3 +14,4 @@
 pub use client::{RequestBuilderExt, ResponseExt, ServiceExt};
 
 pub mod client;
+pub mod rewrite_uri;

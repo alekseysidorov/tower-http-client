@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Added `rewrite_uri` module with a `RewriteUri` trait and `RewriteUriLayer` /
+  `RewriteUriService` middleware pair for composable client-side URI rewriting
+  (e.g. load balancing, environment switching).
+
 - Added a `query` method to `ClientRequestBuilder` and `RequestBuilderExt` for
   setting URL query parameters from any `serde::Serialize` type. The method
   replaces any existing query string entirely. Enabled by default via the
