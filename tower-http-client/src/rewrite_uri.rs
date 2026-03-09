@@ -1,24 +1,12 @@
 //! Middleware for rewriting request URIs.
 //!
-//! This module provides the [`RewriteUri`] trait and the
-//! [`RewriteUriLayer`]/[`RewriteUriService`] pair for composable URI rewriting
-//! in Tower middleware stacks.
-//!
-//! # Overview
-//!
-//! A common pattern in service-oriented architectures is for a client to
-//! construct requests with relative URIs (e.g. `/users/42`) while the actual
-//! target host is resolved later in the middleware stack — for example by a
-//! load balancer that picks a backend node, or by configuration that selects
-//! between staging and production environments.  [`RewriteUriLayer`] lets you
-//! place that host-selection logic in one place: it intercepts every outgoing
-//! request, calls your rewrite policy to produce the final absolute URI, and
-//! then forwards the modified request to the inner service.
+//! Use [`RewriteUriLayer`] when the client builds requests with relative URIs
+//! and the target host must be resolved later — for example, to implement
+//! load balancing or to switch between staging and production environments.
 //!
 //! # Example
 //!
-//! Routing requests to a backend chosen at runtime (e.g. simple load
-//! balancing):
+//! Routing requests to a backend chosen at runtime (e.g. load balancing):
 //!
 //! ```rust
 //! use http::Uri;
@@ -60,10 +48,7 @@
 //! }
 //! ```
 
-use std::{
-    fmt,
-    task::{Context, Poll},
-};
+use std::task::{Context, Poll};
 
 use futures_util::future::{Either, Ready, ready};
 use tower_layer::Layer;
@@ -97,6 +82,7 @@ where
 ///
 /// Wraps an inner service and rewrites the URI of each incoming request before
 /// forwarding it.
+#[derive(Debug, Clone)]
 pub struct RewriteUriLayer<R> {
     rewrite: R,
 }
@@ -105,22 +91,6 @@ impl<R> RewriteUriLayer<R> {
     /// Create a new [`RewriteUriLayer`] with the given rewrite policy.
     pub fn new(rewrite: R) -> Self {
         Self { rewrite }
-    }
-}
-
-impl<R> fmt::Debug for RewriteUriLayer<R> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("RewriteUriLayer")
-            .field("rewrite", &std::any::type_name::<R>())
-            .finish()
-    }
-}
-
-impl<R: Clone> Clone for RewriteUriLayer<R> {
-    fn clone(&self) -> Self {
-        Self {
-            rewrite: self.rewrite.clone(),
-        }
     }
 }
 
@@ -133,6 +103,7 @@ impl<S, R: Clone> Layer<S> for RewriteUriLayer<R> {
 }
 
 /// Middleware that rewrites the URI of each request using a [`RewriteUri`] policy.
+#[derive(Debug, Clone)]
 pub struct RewriteUriService<S, R> {
     inner: S,
     rewrite: R,
@@ -142,31 +113,6 @@ impl<S, R> RewriteUriService<S, R> {
     /// Create a new [`RewriteUriService`].
     pub fn new(inner: S, rewrite: R) -> Self {
         Self { inner, rewrite }
-    }
-}
-
-impl<S, R> fmt::Debug for RewriteUriService<S, R>
-where
-    S: fmt::Debug,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("RewriteUriService")
-            .field("inner", &self.inner)
-            .field("rewrite", &std::any::type_name::<R>())
-            .finish()
-    }
-}
-
-impl<S, R> Clone for RewriteUriService<S, R>
-where
-    S: Clone,
-    R: Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            inner: self.inner.clone(),
-            rewrite: self.rewrite.clone(),
-        }
     }
 }
 
@@ -221,8 +167,10 @@ mod tests {
             Ok::<_, Infallible>(Uri::from_static("http://example.com/rewritten"))
         });
 
-        let req = Request::builder().uri("/original").body(()).unwrap();
-        let response = svc.call(req).await.unwrap();
+        let response = svc
+            .call(Request::builder().uri("/original").body(()).unwrap())
+            .await
+            .unwrap();
         assert_eq!(response.into_body(), "http://example.com/rewritten");
     }
 
@@ -243,7 +191,8 @@ mod tests {
         let mut svc = ServiceBuilder::new()
             .layer(RewriteUriLayer::new(|uri: &Uri| {
                 let path = uri.path_and_query().map_or("/", |pq| pq.as_str());
-                Ok::<_, Infallible>(format!("http://example.com{path}").parse::<Uri>().unwrap())
+                let new_uri: Uri = format!("http://example.com{path}").parse().unwrap();
+                Ok::<_, Infallible>(new_uri)
             }))
             .service(capture_uri_service());
 
