@@ -77,6 +77,10 @@ required-features = ["form"]
 name = "boxed_client"
 required-features = ["json"]
 
+[[example]]
+name = "rewrite_uri"
+required-features = ["rewrite-uri"]
+
 [[bench]]
 harness = false
 name = "client"
