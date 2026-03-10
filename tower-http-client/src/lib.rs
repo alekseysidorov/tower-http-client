@@ -1,5 +1,6 @@
 //! # Overview
 //!
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_utils::include_md!("README.md:description")]
 //!
 //! An example of multi-threaded concurrent requests sending routine with the requests rate limit.
