@@ -39,7 +39,7 @@
         rustToolchains = {
           stable = (fenixPackage.fromToolchainName rustVersions.stable).completeToolchain;
           msrv = (fenixPackage.fromToolchainName rustVersions.msrv).defaultToolchain;
-          nightly = fenixPackage.complete.withComponents [ "rustfmt" ];
+          nightly = fenixPackage.default.toolchain;
         };
 
         # Common runtime inputs used in this project.
@@ -83,8 +83,15 @@
           doctest = rustDev.mkCargoCheck "test" "--doc --workspace --all-features";
         };
         # for `nix develop` and direnv
-        devShells.default = pkgs.mkShell {
-          nativeBuildInputs = runtimeInputs;
+        devShells = {
+          default = pkgs.mkShell {
+            nativeBuildInputs = runtimeInputs;
+          };
+          nightly = pkgs.mkShell {
+            nativeBuildInputs = [
+              rustToolchains.nightly
+            ];
+          };
         };
         # for `nix run`
         packages = (rustDev.mkCheckPackages self.checks.${system}) // {
