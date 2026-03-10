@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
-use tower::{ServiceBuilder, ServiceExt as _};
+use tower::{BoxError, ServiceBuilder, ServiceExt as _};
 use tower_http::ServiceBuilderExt as _;
 use tower_http_client::{ResponseExt as _, ServiceExt as _};
 use tower_reqwest::HttpClientLayer;
@@ -16,7 +16,7 @@ struct SomeInfo {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), BoxError> {
     let (_mock_server, mock_server_uri) = create_mock_server().await;
 
     eprintln!("-> Creating an HTTP client with Tower layers...");
@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map_request_body(|body: http_body_util::Full<Bytes>| reqwest::Body::wrap(body))
         .layer(HttpClientLayer)
         .service(reqwest::Client::new())
-        .map_err(anyhow::Error::msg)
+        .map_err(BoxError::from)
         .boxed_clone();
 
     let response = client

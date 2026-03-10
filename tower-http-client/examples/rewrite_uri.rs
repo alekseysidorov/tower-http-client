@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use http::Uri;
-use tower::{ServiceBuilder, ServiceExt as _};
+use tower::{BoxError, ServiceBuilder, ServiceExt as _};
 use tower_http::ServiceBuilderExt as _;
 use tower_http_client::{
     ServiceExt as _,
@@ -23,7 +23,7 @@ struct BaseUri {
 
 impl BaseUri {
     /// Create a new `BaseUri` rewriter from the parts (scheme and authority) of the given URI.
-    fn from_uri(uri: Uri) -> Result<Self, std::io::Error> {
+    fn from_uri(uri: Uri) -> Result<Self, BoxError> {
         let parts = uri.into_parts();
         Ok(Self {
             scheme: parts
@@ -50,7 +50,7 @@ impl RewriteUri for BaseUri {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), BoxError> {
     let (_mock_server, mock_server_uri) = create_mock_server().await;
 
     eprintln!("-> Creating an HTTP client with RewriteUri layer...");
@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut client = ServiceBuilder::new()
         // Rewrite every request URI to target the mock server base URI.
         .layer(RewriteUriLayer::new(BaseUri::from_uri(mock_uri)?))
-        .map_err(anyhow::Error::msg)
+        .map_err(BoxError::from)
         .service(base_client)
         .boxed_clone();
 
