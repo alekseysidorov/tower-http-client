@@ -63,6 +63,7 @@ json = ["dep:serde", "dep:serde_json", "http-body-reader/json"]
 url = ["dep:url"]
 typed-header = ["dep:headers"]
 query = ["dep:serde", "dep:serde_urlencoded"]
+rewrite-uri = []
 
 [[example]]
 name = "send_json"

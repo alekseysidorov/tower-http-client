@@ -14,4 +14,5 @@
 pub use client::{RequestBuilderExt, ResponseExt, ServiceExt};
 
 pub mod client;
+#[cfg(feature = "rewrite-uri")]
 pub mod rewrite_uri;
