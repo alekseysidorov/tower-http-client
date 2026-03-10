@@ -23,11 +23,15 @@ struct BaseUri {
 
 impl BaseUri {
     /// Create a new `BaseUri` rewriter from the parts (scheme and authority) of the given URI.
-    fn from_uri(uri: Uri) -> Option<Self> {
+    fn from_uri(uri: Uri) -> Result<Self, std::io::Error> {
         let parts = uri.into_parts();
-        Some(Self {
-            scheme: parts.scheme?,
-            authority: parts.authority?,
+        Ok(Self {
+            scheme: parts
+                .scheme
+                .ok_or_else(|| std::io::Error::other("missing scheme"))?,
+            authority: parts
+                .authority
+                .ok_or_else(|| std::io::Error::other("missing authority"))?,
         })
     }
 }
@@ -60,9 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut client = ServiceBuilder::new()
         // Rewrite every request URI to target the mock server base URI.
-        .layer(RewriteUriLayer::new(
-            BaseUri::from_uri(mock_uri).expect("Base URI should have scheme and authority"),
-        ))
+        .layer(RewriteUriLayer::new(BaseUri::from_uri(mock_uri)?))
         .map_err(anyhow::Error::msg)
         .service(base_client)
         .boxed_clone();
