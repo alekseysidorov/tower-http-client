@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+- **breaking:** Bumped `reqwest` dependency version to `0.13`.
+
 - Added `rewrite_uri` module with a `RewriteUri` trait and `RewriteUriLayer` /
   `RewriteUriService` middleware pair for composable client-side URI rewriting
   (e.g. load balancing, environment switching).
