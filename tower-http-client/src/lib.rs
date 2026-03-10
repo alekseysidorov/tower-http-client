@@ -1,6 +1,3 @@
-#![cfg_attr(docsrs, feature(doc_cfg))]
-#![warn(missing_docs)]
-
 //! # Overview
 //!
 #![doc = include_utils::include_md!("README.md:description")]
