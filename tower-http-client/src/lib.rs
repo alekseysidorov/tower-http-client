@@ -1,6 +1,3 @@
-#![cfg_attr(docsrs, feature(doc_cfg))]
-#![warn(missing_docs)]
-
 //! # Overview
 //!
 #![doc = include_utils::include_md!("README.md:description")]
@@ -10,6 +7,8 @@
 //! ```rust
 #![doc = include_str!("../examples/rate_limiter.rs")]
 //! ```
+
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub use client::{RequestBuilderExt, ResponseExt, ServiceExt};
 

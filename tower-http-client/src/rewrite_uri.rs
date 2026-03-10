@@ -26,26 +26,7 @@
 //! Using a struct implementing [`RewriteUri`] to switch between environments:
 //!
 //! ```rust
-//! use http::Uri;
-//! use tower_http_client::rewrite_uri::{RewriteUri, RewriteUriLayer};
-//!
-//! /// Rewrites every request to target a fixed base URI, preserving the
-//! /// original path and query.  Useful for pointing a client at staging vs
-//! /// production without changing call sites.
-//! #[derive(Clone)]
-//! struct BaseUri {
-//!     base: Uri,
-//! }
-//!
-//! impl RewriteUri for BaseUri {
-//!     type Error = http::Error;
-//!
-//!     fn rewrite_uri(&mut self, uri: &Uri) -> Result<Uri, Self::Error> {
-//!         let base = &self.base;
-//!         let path = uri.path_and_query().map_or("/", |pq| pq.as_str());
-//!         format!("{base}{path}").parse::<Uri>().map_err(http::Error::from)
-//!     }
-//! }
+#![doc = include_str!("../examples/rewrite_uri.rs")]
 //! ```
 
 use std::task::{Context, Poll};
