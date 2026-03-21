@@ -57,7 +57,7 @@ tower-reqwest = { workspace = true }
 wiremock = { workspace = true }
 
 [features]
-default = ["form", "json", "typed-header", "query", "rewrite-uri"]
+default = ["url", "form", "json", "typed-header", "query", "rewrite-uri"]
 form = ["dep:serde", "dep:serde_urlencoded", "http-body-reader/form"]
 json = ["dep:serde", "dep:serde_json", "http-body-reader/json"]
 url = ["dep:url"]
