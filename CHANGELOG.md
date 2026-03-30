@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-31
+
 - **Breaking:** Bumped the `reqwest` dependency to `0.13`.
 
 - Added the `rewrite_uri` module with a `RewriteUri` trait and a
