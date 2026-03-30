@@ -43,9 +43,8 @@
         };
 
         # Common runtime inputs used in this project.
-        runtimeInputs = with pkgs; [
+        runtimeInputs = [
           rustToolchains.stable
-          cargo-machete
         ];
 
         # Import rust dev flake
@@ -85,7 +84,13 @@
         # for `nix develop` and direnv
         devShells = {
           default = pkgs.mkShell {
-            nativeBuildInputs = runtimeInputs;
+            nativeBuildInputs =
+              with pkgs;
+              runtimeInputs
+              ++ [
+                cargo-machete
+                tombi
+              ];
           };
           nightly = pkgs.mkShell {
             nativeBuildInputs = [

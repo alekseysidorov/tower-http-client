@@ -3,21 +3,19 @@ resolver = "3"
 members = ["tower-http-client", "tower-reqwest"]
 
 [workspace.package]
+version = "0.6.0"
 edition = "2024"
 rust-version = "1.89"
-version = "0.6.0-rc.1"
+repository = "https://github.com/alekseysidorov/tower-http-client"
+license = "MIT OR Apache-2.0"
+keywords = ["async", "futures", "http", "io", "service"]
 categories = [
   "asynchronous",
   "network-programming",
   "web-programming::http-client",
 ]
-keywords = ["io", "async", "futures", "service", "http"]
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/alekseysidorov/tower-http-client"
 
 [workspace.dependencies]
-tower-reqwest = { version = "0.6.0-rc.1", path = "tower-reqwest" }
-
 anyhow = "1.0"
 async-trait = "0.1"
 axum = "0.8.4"
@@ -40,23 +38,24 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 serde_urlencoded = "0.7.1"
 thiserror = "2.0"
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.41.1", features = ["macros", "rt-multi-thread"] }
 tower = { version = "0.5", default-features = false }
 tower-http = { version = "0.6", default-features = false, features = ["util"] }
 tower-layer = "0.3"
+tower-reqwest = { path = "tower-reqwest", version = "0.6.0" }
 tower-service = "0.3"
 url = "2.5"
 wiremock = "0.6"
 
+[workspace.lints.clippy]
+missing_errors_doc = "allow"
+missing_panics_doc = "warn"
+module_name_repetitions = "allow"
+pedantic = { level = "warn", priority = -1 }
+
 [workspace.lints.rust]
 missing_debug_implementations = "warn"
 unsafe_code = "forbid"
-
-[workspace.lints.clippy]
-pedantic = { level = "warn", priority = -1 }
-module_name_repetitions = "allow"
-missing_panics_doc = "warn"
-missing_errors_doc = "allow"
 
 [workspace.lints.rustdoc]
 broken_intra_doc_links = "deny"
