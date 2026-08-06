@@ -16,22 +16,31 @@ categories.workspace = true
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
+[features]
+default = ["url", "form", "json", "typed-header", "query", "rewrite-uri"]
+form = ["dep:serde", "dep:serde_urlencoded", "http-body-reader/form"]
+json = ["dep:serde", "dep:serde_json", "http-body-reader/json"]
+url = ["dep:url"]
+typed-header = ["dep:headers"]
+query = ["dep:serde", "dep:serde_urlencoded"]
+rewrite-uri = []
+
 [dependencies]
 bytes = { workspace = true }
 futures-util = { workspace = true }
+
+headers = { workspace = true, optional = true }
 http = { workspace = true }
 http-body-reader = { workspace = true }
 http-body-util = { workspace = true }
 include-utils = { workspace = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+serde_urlencoded = { workspace = true, optional = true }
 thiserror = { workspace = true }
 tower = { workspace = true, default-features = false, features = ["util"] }
 tower-layer = { workspace = true }
 tower-service = { workspace = true }
-
-headers = { workspace = true, optional = true }
-serde = { workspace = true, optional = true }
-serde_json = { workspace = true, optional = true }
-serde_urlencoded = { workspace = true, optional = true }
 url = { workspace = true, optional = true }
 
 [dev-dependencies]
@@ -55,15 +64,6 @@ tower-http = { workspace = true, features = [
 ] }
 tower-reqwest = { workspace = true }
 wiremock = { workspace = true }
-
-[features]
-default = ["url", "form", "json", "typed-header", "query", "rewrite-uri"]
-form = ["dep:serde", "dep:serde_urlencoded", "http-body-reader/form"]
-json = ["dep:serde", "dep:serde_json", "http-body-reader/json"]
-url = ["dep:url"]
-typed-header = ["dep:headers"]
-query = ["dep:serde", "dep:serde_urlencoded"]
-rewrite-uri = []
 
 [[example]]
 name = "send_json"
