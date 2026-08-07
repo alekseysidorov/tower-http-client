@@ -8,7 +8,7 @@ and this project adheres to
 
 ## [Unreleased]
 
-## [0.6.1] - 2026-08-06
+## [0.6.1] - 2026-08-07
 
 - Bump minimum supported Rust version to `1.92`. Update crate dependencies.
 
