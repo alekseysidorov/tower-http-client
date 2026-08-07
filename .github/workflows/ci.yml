@@ -14,6 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
+        with:
+          name: alekseysidorov-ci
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: "Run semver compatibility checks"
         run: nix run .#check-cargo-semver
@@ -29,6 +33,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
+        with:
+          name: alekseysidorov-ci
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: "Run tests"
         run: nix flake check
