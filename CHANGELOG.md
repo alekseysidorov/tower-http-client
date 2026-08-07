@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-08-07
+
+- Bump minimum supported Rust version to `1.92`. Update crate dependencies.
+
 ## [0.6.0] - 2026-03-31
 
 - **Breaking:** Bumped the `reqwest` dependency to `0.13`.
