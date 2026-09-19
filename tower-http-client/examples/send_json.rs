@@ -54,7 +54,7 @@ async fn create_mock_server() -> (MockServer, String) {
         .respond_with(move |request: &wiremock::Request| {
             let info: SomeInfo = serde_json::from_slice(request.body.as_ref()).unwrap();
 
-            eprintln!("Received request with info {info:?}",);
+            eprintln!("Received request with info {info:?}");
             ResponseTemplate::new(200)
                 .set_body_json(format!("I am {} and {} years old", info.name, info.age))
         })
