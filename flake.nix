@@ -1,159 +1,148 @@
 {
+  description = "Tower middleware and utilities for HTTP clients.";
+
   inputs = {
-    # Nix
+    # Keep the compiler and Nix package set on the same stable channel.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     flake-parts.url = "github:hercules-ci/flake-parts";
 
-    # Build
-    fenix.url = "github:nix-community/fenix/monthly";
-
-    # Development
-    rust-dev-flake = {
-      url = "github:alekseysidorov/rust-dev-flake";
+    # Reuse the shared Rust overlay and project-source helper.
+    nix-devtools = {
+      url = "github:alekseysidorov/nix-devtools";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
     };
-    treefmt-nix.url = "github:numtide/treefmt-nix";
+
+    crane.url = "github:ipetkov/crane";
+    rust-advisory-db = {
+      url = "github:rustsec/advisory-db";
+      flake = false;
+    };
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
-    {
-      self,
-      nixpkgs,
-      flake-parts,
-      fenix,
-      rust-dev-flake,
-      treefmt-nix,
-    }@inputs:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      # Declared systems that your flake supports. These will be enumerated in perSystem
-      systems = nixpkgs.lib.systems.flakeExposed;
-
-      imports = [
-        treefmt-nix.flakeModule
-        rust-dev-flake.flakeModules.gitHooks
-      ];
-
-      perSystem =
-        { system, ... }:
+    inputs:
+    inputs.flake-parts.lib.mkFlake
+      {
+        inherit inputs;
+        # Keep provider-owned inputs available to the composed flake modules.
+        specialArgs.localInputs = inputs;
+      }
+      (
+        { ... }:
         let
-          # Common nix packages
-          pkgs = import nixpkgs {
-            inherit system;
-            overlays = [ rust-dev-flake.overlays.default ];
-          };
-          # Fenix Rust toolchains
-          fenixPackage = fenix.packages.${system};
-          # Minimum supported Rust version
-          rustVersions = {
-            msrv = {
-              name = "1.92.0";
-              sha256 = "sha256-sqSWJDUxc+zaz1nBWMAJKTAGBuGWP25GCftIOlCEAtA=";
-            };
-            # Rust toolchain versions used in this project
-            stable = {
-              name = "1.97.1";
-              sha256 = "sha256-A1abGIbOtcBSdrUMhDGrER3pRM1hQP4fp9gh3Y4PKc8=";
-            };
-          };
-          # Complete toolchains set
-          rustToolchains = {
-            stable = (fenixPackage.fromToolchainName rustVersions.stable).completeToolchain;
-            msrv = (fenixPackage.fromToolchainName rustVersions.msrv).defaultToolchain;
-            nightly = fenixPackage.complete.withComponents [ "rustfmt" ];
-          };
-
-          # Import rust dev flake
-          rustDev = pkgs.rustDev.mkRustDevHelpers {
-            inherit self;
-            # Exclude gitignored files without dropping non-Rust build and test assets.
-            projectRoot = pkgs.projectSource {
-              projectRoot = self;
-            };
-            # Common runtime inputs used in this project.
-            runtimeInputs = [
-              rustToolchains.stable
-            ];
-            toolchain = rustToolchains.msrv;
-          };
+          inherit (inputs.nixpkgs) lib;
+          # Use nix-devtools' public overlay so rust-bin has one shared owner.
+          defaultOverlay = inputs.nix-devtools.overlays.default;
         in
         {
-          # Use the modified pkgs with overlays for all modules and packages in this system.
-          _module.args.pkgs = pkgs;
-          # Setup nix formatting with treefmt-nix.
-          treefmt = {
-            # Project root marker used by treefmt
-            projectRootFile = "flake.nix";
+          systems = lib.systems.flakeExposed;
+          imports = [
+            inputs.treefmt-nix.flakeModule
+            inputs.nix-devtools.flakeModule
+          ];
+          flake.overlays.default = defaultOverlay;
 
-            programs = {
-              nixfmt.enable = true;
-              rustfmt = {
-                enable = true;
-                # Use nightly Rust toolchain to get more configuration options.
-                package = rustToolchains.nightly;
+          perSystem =
+            { system, ... }:
+            let
+              # Build checks and shells from one consistently extended package set.
+              pkgs = inputs.nixpkgs.legacyPackages.${system}.extend inputs.self.overlays.default;
+              rustToolchain = pkgs.rust-bin.stable.latest.default.override {
+                extensions = [
+                  "clippy"
+                  "rust-src"
+                  "rustfmt"
+                ];
               };
-              beautysh.enable = true;
-              deno.enable = true;
-              taplo.enable = true;
+              craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
+              # Respect .gitignore while retaining all project files needed by Cargo.
+              src = pkgs.projectSource { projectRoot = ./.; };
+              commonArgs = {
+                inherit src;
+                pname = "tower-http-client";
+                version = "0.6.1";
+                strictDeps = true;
+              };
+              cargoArtifacts = craneLib.buildDepsOnly commonArgs;
+              package = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; });
+              # Retain release checks used by the repositories' existing push hook.
+              # This cargo-semver-checks release parses rustdoc only through v57.
+              # Rust 1.96 emits v57; project build/test checks remain on latest stable.
+              semverToolchain = pkgs.rust-bin.stable."1.96.0".default;
+              semverCheck = pkgs.writeShellApplication {
+                name = "check-cargo-semver";
+                runtimeInputs = [
+                  semverToolchain
+                  pkgs.cargo-semver-checks
+                ];
+                text = ''exec cargo semver-checks --workspace "$@"'';
+              };
+              publishCheck = pkgs.writeShellApplication {
+                name = "check-cargo-publish";
+                runtimeInputs = [ rustToolchain ];
+                text = ''exec cargo publish --workspace --dry-run --allow-dirty "$@"'';
+              };
+            in
+            {
+              treefmt = {
+                projectRootFile = "flake.nix";
+                programs = {
+                  nixfmt.enable = true;
+                  rustfmt = {
+                    enable = true;
+                    package = rustToolchain;
+                  };
+                  taplo.enable = true;
+                };
+              };
+              packages = {
+                default = package;
+                check-cargo-semver = semverCheck;
+                check-cargo-publish = publishCheck;
+              };
+              checks = {
+                build = package;
+                test = craneLib.cargoTest (
+                  commonArgs
+                  // {
+                    inherit cargoArtifacts;
+                    cargoTestExtraArgs = "--workspace --all-targets --all-features";
+                  }
+                );
+                clippy = craneLib.cargoClippy (
+                  commonArgs
+                  // {
+                    inherit cargoArtifacts;
+                    cargoClippyExtraArgs = "--workspace --all-targets --all-features -- -D warnings";
+                  }
+                );
+                doc = craneLib.cargoDoc (
+                  commonArgs
+                  // {
+                    inherit cargoArtifacts;
+                    cargoDocExtraArgs = "--workspace --all-features --no-deps";
+                  }
+                );
+                audit = craneLib.cargoAudit {
+                  inherit src;
+                  advisory-db = inputs.rust-advisory-db;
+                };
+              };
+              devShells.default = pkgs.mkShell {
+                packages = [
+                  rustToolchain
+                  pkgs.cargo-audit
+                  pkgs.cargo-nextest
+                  pkgs.rust-analyzer
+                ];
+              };
             };
-          };
-          # for `nix flake check`
-          checks = {
-            test = rustDev.mkCargoCheck "nextest" "--workspace --all-targets --no-default-features";
-            test-all-features = rustDev.mkCargoCheck "nextest" "--workspace --all-targets --all-features";
-            clippy = rustDev.mkCargoCheck "clippy" "--workspace --all-targets --all-features -- -D warnings";
-            doc = rustDev.mkCargoCheck "doc" "--workspace --all-features --no-deps";
-            doctest = rustDev.mkCargoCheck "test" "--doc --workspace --all-features";
-            audit = rustDev.mkCargoCheck "audit" "";
-          };
-
-          devShells = {
-            # for `nix develop` and direnv
-            default = pkgs.mkShell {
-              nativeBuildInputs = [
-                rustToolchains.stable
-
-                pkgs.marksman
-                pkgs.typos-lsp
-                pkgs.crates-lsp
-                pkgs.yaml-language-server
-                pkgs.nil
-                pkgs.nixd
-                pkgs.tombi
-              ];
-            };
-            # for nightly rust
-            nightly = pkgs.mkShell {
-              nativeBuildInputs = [
-                rustToolchains.nightly
-              ];
-            };
-          };
-
-          # for `nix run`
-          packages = (rustDev.mkCheckPackages self.checks.${system}) // {
-            inherit (rustDev.runtimeChecks)
-              check-cargo-semver
-              check-cargo-publish
-              ;
-          };
-
-          # Install explicitly with `nix run .#install-git-hooks`.
-          gitHooks = {
-            pre-commit = pkgs.writeNuShellScript "pre-commit" ''
-              print "⚡️ Running pre-commit checks..."
-              nix build .#check-treefmt -L
-            '';
-            pre-push = pkgs.writeNuShellScript "pre-push" ''
-              print "⚡️ Running flake checks..."
-              nix flake check -L
-              print "⚡️ Running semver checks..."
-              nix run .#check-cargo-semver -L
-              print "⚡️ Running cargo publish compatibility checks..."
-              nix run .#check-cargo-publish -L
-            '';
-          };
-        };
-    };
+        }
+      );
 }

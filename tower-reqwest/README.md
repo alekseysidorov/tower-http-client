@@ -3,7 +3,7 @@
 [![tests](https://github.com/alekseysidorov/tower-http-client/actions/workflows/ci.yml/badge.svg)](https://github.com/alekseysidorov/tower-http-client/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/tower-reqwest.svg)](https://crates.io/crates/tower-reqwest)
 [![Documentation](https://docs.rs/tower-reqwest/badge.svg)](https://docs.rs/tower-reqwest)
-[![MIT/Apache-2 licensed](https://img.shields.io/crates/l/tower-reqwest)](./LICENSE)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 
 <!-- ANCHOR: description -->
 
@@ -63,5 +63,11 @@ async fn main() -> anyhow::Result<()> {
 
 [reqwest]: https://github.com/seanmonstar/reqwest
 [tower_http]: https://github.com/tower-rs/tower-http
+
+## License
+
+Licensed under either the [Apache License, Version 2.0](LICENSE-APACHE) or the
+[MIT license](LICENSE-MIT), at your option. Both license texts are included in
+the published crate.
 
 <!-- ANCHOR_END: description -->
