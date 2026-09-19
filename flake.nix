@@ -12,9 +12,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-parts.follows = "flake-parts";
       inputs.treefmt-nix.follows = "treefmt-nix";
+      inputs.rust-advisory-db.follows = "rust-advisory-db";
     };
 
-    crane.url = "github:ipetkov/crane";
     rust-advisory-db = {
       url = "github:rustsec/advisory-db";
       flake = false;
@@ -30,15 +30,16 @@
     inputs.flake-parts.lib.mkFlake
       {
         inherit inputs;
-        # Keep provider-owned inputs available to the composed flake modules.
-        specialArgs.localInputs = inputs;
+        # The hook module currently resolves pkgs from these two provider values.
+        specialArgs.localInputs = {
+          inherit (inputs) nixpkgs;
+          self = inputs.nix-devtools;
+        };
       }
       (
         { ... }:
         let
           inherit (inputs.nixpkgs) lib;
-          # Use nix-devtools' public overlay so rust-bin has one shared owner.
-          defaultOverlay = inputs.nix-devtools.overlays.default;
         in
         {
           systems = lib.systems.flakeExposed;
@@ -46,101 +47,118 @@
             inputs.treefmt-nix.flakeModule
             inputs.nix-devtools.flakeModule
           ];
-          flake.overlays.default = defaultOverlay;
 
           perSystem =
             { system, ... }:
             let
-              # Build checks and shells from one consistently extended package set.
-              pkgs = inputs.nixpkgs.legacyPackages.${system}.extend inputs.self.overlays.default;
-              rustToolchain = pkgs.rust-bin.stable.latest.default.override {
-                extensions = [
-                  "clippy"
-                  "rust-src"
-                  "rustfmt"
-                ];
+              # Extend this flake's package set locally; rust-bin is an implementation detail.
+              pkgs = inputs.nixpkgs.legacyPackages.${system}.extend inputs.nix-devtools.overlays.default;
+
+              # Keep the minimum compiler explicit while following the current stable channel.
+              rustVersions = {
+                msrv = "1.92.0";
+                stable = "1.96.0";
               };
-              craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
+
+              # Checks use MSRV; development follows stable, and nightly supplies only rustfmt.
+              rustToolchains = {
+                stable = pkgs.rust-bin.stable.${rustVersions.stable}.default.override {
+                  extensions = [
+                    "clippy"
+                    "rust-src"
+                    "rustfmt"
+                  ];
+                };
+                msrv = pkgs.rust-bin.stable.${rustVersions.msrv}.default;
+                nightly = pkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.rustfmt);
+              };
+
               # Respect .gitignore while retaining all project files needed by Cargo.
               src = pkgs.projectSource { projectRoot = ./.; };
-              commonArgs = {
-                inherit src;
-                pname = "tower-http-client";
-                version = "0.6.1";
-                strictDeps = true;
-              };
-              cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-              package = craneLib.buildPackage (commonArgs // { inherit cargoArtifacts; });
-              # Retain release checks used by the repositories' existing push hook.
-              # This cargo-semver-checks release parses rustdoc only through v57.
-              # Rust 1.96 emits v57; project build/test checks remain on latest stable.
-              semverToolchain = pkgs.rust-bin.stable."1.96.0".default;
-              semverCheck = pkgs.writeShellApplication {
-                name = "check-cargo-semver";
-                runtimeInputs = [
-                  semverToolchain
-                  pkgs.cargo-semver-checks
-                ];
-                text = ''exec cargo semver-checks --workspace "$@"'';
-              };
-              publishCheck = pkgs.writeShellApplication {
-                name = "check-cargo-publish";
-                runtimeInputs = [ rustToolchain ];
-                text = ''exec cargo publish --workspace --dry-run --allow-dirty "$@"'';
+
+              # Reuse nix-devtools' vendoring and shared Crane artifacts for project checks.
+              rustDev = pkgs.mkRustDevHelpers {
+                inherit pkgs src;
+                toolchain = rustToolchains.msrv;
               };
             in
             {
+              packages = {
+                # Cargo package itself.
+                default = rustDev.craneLib.buildPackage {
+                  inherit src;
+                  strictDeps = true;
+                  cargoVendorDir = rustDev.craneLib.vendorCargoDeps { inherit src; };
+                  cargoArtifacts = rustDev.cargoArtifacts;
+                };
+
+                check-cargo-semver = pkgs.writeNushellApplication {
+                  name = "check-cargo-semver";
+                  runtimeInputs = [
+                    rustToolchains.stable
+                    pkgs.cargo-semver-checks
+                  ];
+                  text = ''
+                    def main [...args: string] {
+                      ^cargo semver-checks --workspace ...$args
+                    }
+                  '';
+                };
+
+                check-cargo-publish = pkgs.writeNushellApplication {
+                  name = "check-cargo-publish";
+                  runtimeInputs = [ rustToolchains.stable ];
+                  text = ''
+                    def main [...args: string] {
+                      ^cargo publish --workspace --dry-run --allow-dirty ...$args
+                    }
+                  '';
+                };
+              };
+
+              checks = {
+                test = rustDev.checks.nextest "--workspace --all-targets --no-default-features";
+                test-all-features = rustDev.checks.nextest "--workspace --all-targets --all-features";
+                clippy = rustDev.checks.clippy "--workspace --all-targets --all-features -- -D warnings";
+                doc = rustDev.checks.doc "--workspace --all-features --no-deps";
+                doctest = rustDev.checks.test "--doc --workspace --all-features";
+                audit = rustDev.checks.audit "";
+              };
+
+              devShells.default = pkgs.mkShell {
+                packages = [
+                  rustToolchains.stable
+                  pkgs.cargo-audit
+                  pkgs.cargo-nextest
+                ];
+              };
+
               treefmt = {
                 projectRootFile = "flake.nix";
                 programs = {
                   nixfmt.enable = true;
                   rustfmt = {
                     enable = true;
-                    package = rustToolchain;
+                    package = rustToolchains.nightly;
                   };
                   taplo.enable = true;
                 };
               };
-              packages = {
-                default = package;
-                check-cargo-semver = semverCheck;
-                check-cargo-publish = publishCheck;
-              };
-              checks = {
-                build = package;
-                test = craneLib.cargoTest (
-                  commonArgs
-                  // {
-                    inherit cargoArtifacts;
-                    cargoTestExtraArgs = "--workspace --all-targets --all-features";
-                  }
-                );
-                clippy = craneLib.cargoClippy (
-                  commonArgs
-                  // {
-                    inherit cargoArtifacts;
-                    cargoClippyExtraArgs = "--workspace --all-targets --all-features -- -D warnings";
-                  }
-                );
-                doc = craneLib.cargoDoc (
-                  commonArgs
-                  // {
-                    inherit cargoArtifacts;
-                    cargoDocExtraArgs = "--workspace --all-features --no-deps";
-                  }
-                );
-                audit = craneLib.cargoAudit {
-                  inherit src;
-                  advisory-db = inputs.rust-advisory-db;
-                };
-              };
-              devShells.default = pkgs.mkShell {
-                packages = [
-                  rustToolchain
-                  pkgs.cargo-audit
-                  pkgs.cargo-nextest
-                  pkgs.rust-analyzer
-                ];
+
+              # Install explicitly with `nix run .#install-git-hooks`.
+              gitHooks = {
+                pre-commit = pkgs.writeNushellScript "pre-commit" ''
+                  print "⚡️ Running pre-commit checks..."
+                  nix fmt -- --fail-on-change
+                '';
+                pre-push = pkgs.writeNushellScript "pre-push" ''
+                  print "⚡️ Running flake checks..."
+                  nix flake check -L
+                  print "⚡️ Running semver checks..."
+                  nix run .#check-cargo-semver -L
+                  print "⚡️ Running cargo publish compatibility checks..."
+                  nix run .#check-cargo-publish -L
+                '';
               };
             };
         }

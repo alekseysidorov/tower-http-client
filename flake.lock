@@ -2,21 +2,6 @@
   "nodes": {
     "crane": {
       "locked": {
-        "lastModified": 1789760033,
-        "narHash": "sha256-jtT4yxZpR8seYnlCMMWSSPlFN92zO6ICuZ8pJrmi86k=",
-        "owner": "ipetkov",
-        "repo": "crane",
-        "rev": "73b980519cefc727a5f6cc8e5c0947a2f9be6edd",
-        "type": "github"
-      },
-      "original": {
-        "owner": "ipetkov",
-        "repo": "crane",
-        "type": "github"
-      }
-    },
-    "crane_2": {
-      "locked": {
         "lastModified": 1788465171,
         "narHash": "sha256-Y1/TTVXjYXGF068IThQH9fPSZ0SIE74PABlUxnWTUH0=",
         "owner": "ipetkov",
@@ -50,14 +35,16 @@
     },
     "nix-devtools": {
       "inputs": {
-        "crane": "crane_2",
+        "crane": "crane",
         "flake-parts": [
           "flake-parts"
         ],
         "nixpkgs": [
           "nixpkgs"
         ],
-        "rust-advisory-db": "rust-advisory-db",
+        "rust-advisory-db": [
+          "rust-advisory-db"
+        ],
         "rust-overlay": "rust-overlay",
         "treefmt-nix": [
           "treefmt-nix"
@@ -110,31 +97,14 @@
     },
     "root": {
       "inputs": {
-        "crane": "crane",
         "flake-parts": "flake-parts",
         "nix-devtools": "nix-devtools",
         "nixpkgs": "nixpkgs",
-        "rust-advisory-db": "rust-advisory-db_2",
+        "rust-advisory-db": "rust-advisory-db",
         "treefmt-nix": "treefmt-nix"
       }
     },
     "rust-advisory-db": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1789401966,
-        "narHash": "sha256-9yjzblgyWNo0O1uhNlK6vGf2UNlloxAHtg0PL1AfEHo=",
-        "owner": "rustsec",
-        "repo": "advisory-db",
-        "rev": "e2e640471715167f73e22eaf761f2e547adafeec",
-        "type": "github"
-      },
-      "original": {
-        "owner": "rustsec",
-        "repo": "advisory-db",
-        "type": "github"
-      }
-    },
-    "rust-advisory-db_2": {
       "flake": false,
       "locked": {
         "lastModified": 1789807347,
